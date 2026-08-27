@@ -174,6 +174,28 @@ Verified here (headless Chromium via the CDP driver, unless noted):
 - The quality governor's hold is live: `inPeak()` returns true inside a vignette payoff window and `setTier` defers rather than switching.
 - Diagnostics blob: 1.2 KB of 4 KB, with env, display, frame, run, entities, vignettes, memory, wake, service worker and the error ring.
 
+### Headless soak — nine minutes, not the device test
+
+Not a substitute for the hour on an iPhone, which is still outstanding. What it
+does establish is that nothing in the JavaScript grows without bound.
+
+```
+min  frames  pool  fx  peakPool  peakFx  offscreenMB  heapMB  runs  vig  seen  warn  errs  avg  tier
+  0     169   100   0        0       0     3.06        7.4     0     0     5     0     0    59     0
+  3   10971   111   0      117     105     3.06        5.2     0     5    52     0     0    60     0
+  6   21767   105  22      117     105     3.06        4.5     1     5    68     0     0    60     0
+  9   32570   116   0      117     105     3.06        6.1     1     5    79     0     0    60     0
+```
+
+32,570 frames in nine minutes is 60.3 fps sustained. Offscreen memory did not
+move off 3.06 MB once. The creature pool oscillated between 91 and 117 against
+its cap of 130 and was never pinned; the vignette fx pool peaked at 105 of 180.
+The JS heap sawtoothed between 3.5 and 13.2 MB with no upward trend, so the
+per-frame allocation work is holding. The memory self-check raised no warnings
+and the error ring stayed empty. The governor dropped to tier 1 once at minute
+five and was back at tier 0 by minute six — it shed and restored without
+oscillating, which is the behaviour the hysteresis is for.
+
 **Not verified — these need the phone:** 60 fps with the full roster; that the governor sheds and restores under real load; edge-to-edge fill under the notch and home indicator; Add to Home Screen launching fullscreen as Reef; that the phone genuinely does not sleep on iOS 18.4+; that Copy diagnostics reaches the iOS clipboard; that panel scrolling never rubber-bands the page; whether each vignette beat reads in a few seconds; and **the hour-long soak test**, which is stage 13's last line and is yours to run.
 
 ## Notes carried forward to stage 14
