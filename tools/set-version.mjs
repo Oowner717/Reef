@@ -44,12 +44,21 @@ writeFileSync(VERSION_FILE,
   `export const VERSION = '${version}';\n` +
   `export const BUILD = '${build}';\n`);
 
-const readme = join(ROOT, 'README.md');
-if (existsSync(readme)) {
-  const src = readFileSync(readme, 'utf8');
-  const out = src.replace(/^\*\*Version:\*\*.*$/m, `**Version:** ${version}`);
-  if (out !== src) writeFileSync(readme, out);
-  else console.warn('README has no "**Version:**" line to stamp');
+function patch(rel, pattern, replacement, what) {
+  const file = join(ROOT, rel);
+  if (!existsSync(file)) return;          // not built yet; nothing to stamp
+  const src = readFileSync(file, 'utf8');
+  if (!pattern.test(src)) { console.warn(`${rel} has no ${what} to stamp`); return; }
+  const out = src.replace(pattern, replacement);
+  if (out !== src) writeFileSync(file, out);
 }
+
+patch('README.md', /^\*\*Version:\*\*.*$/m, `**Version:** ${version}`, '"**Version:**" line');
+
+// The cache name carries the version, so a new version means a new cache and
+// the old one is deleted on activate.
+patch('sw.js', /const CACHE = '[^']*'/, `const CACHE = 'reef-v${version}-${build}'`, 'CACHE constant');
+
+patch('manifest.webmanifest', /"version"\s*:\s*"[^"]*"/, `"version": "${version}"`, '"version" field');
 
 console.log(`version ${version}  build ${build}`);

@@ -47,6 +47,7 @@ import * as seen from './glossary/seen.js';
 import * as glossary from './glossary/panel.js';
 import * as settings from './settings/settings.js';
 import * as settingsPanel from './settings/panel.js';
+import * as titleScreen from './title.js';
 
 export const app = {
   iw: 0, ih: 0, scale: 1, dpr: 1, rotated: false,
@@ -259,7 +260,7 @@ const MODULES = [saveMod, camera, water, shallows, reefLand, dropoff, openLand, 
   spawner, vignettes, seen, panel, buttons, glossary, fps,
   // settings runs after the modules it applies into, or their own init
   // would overwrite what the saved value just restored.
-  settings, settingsPanel, debugMenu, debugScene];
+  settings, settingsPanel, debugMenu, debugScene, titleScreen];
 
 try {
   if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(() => {});

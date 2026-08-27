@@ -14,7 +14,7 @@
 | 9 | complete | 0.10.0 |
 | 10 | complete | 0.11.0 |
 | 11 | complete | 0.12.0 |
-| 12 | not started | - |
+| 12 | complete | 0.13.0 |
 | 13 | not started | - |
 
 > **Run note.** The operator asked for stages 0–12 in a single pass and asked
@@ -128,3 +128,12 @@
 - Stats: runs increment on the camera's run-end hook, watched time accumulates every frame, deepest zone tracks the maximum reached, and the run position is written on the same 2 s debounce — which is what stage 12's depth resume and a silent Safari reload both need.
 - Verified with CDP: three settings changed, written to the save, and still in force after a reload, with `fpsOn / densityMul / app.reduced` all live. A five-case robustness suite injected before the app's first line — normal, corrupt save, future schema version, `localStorage` throwing on every access, and `?save=0` — runs clean in all five: the corrupt and future saves are backed up and the app starts fresh, storage-denied falls back to memory with zero writes, and every case keeps rendering with a full population and no console errors.
 - Needs device check: that each row's change is visible immediately on the phone, that the two-step Reset reads clearly, and that the dial is distinguishable from the shell at 25% opacity.
+
+## Stage 12
+- Built: `js/title.js` — the REEF wordmark generated from 6x7 letter blocks scaled 3x, a drop shadow, a caustic shimmer band clipped across the letter faces, the version and seen-count line, three creature silhouettes drifting, and a serpent far back in the haze as a tease for something not yet met. Extended `tools/set-version.mjs` to stamp `sw.js`'s cache name and the manifest's version, ready for stage 13.
+- Decided: the title hazes the real scene back rather than replacing it, so the water, the ceiling, the sand and the live population are all still what you are looking at. It costs no loading time because the atlas, the water strip and the save all happen before the first frame regardless.
+- Decided: the depth resume runs whether or not the title is shown. A silent Safari reload has to land at the same depth even with `?title=0`, and `?start=` still wins over it.
+- Fixed a crash that would have hit every cold start: `title.js` called `spawner.repopulate()`, but `repopulate` is a module export rather than a property of the `spawner` object. Added `seek(t)` to the camera so the resume can land on an arbitrary point in the run.
+- Verified with CDP: the title holds 2.2 s and cross-fades out over 600 ms with no cut; a tap jumps to the fade rather than cutting; `?title=0` disables it; under reduced motion the shimmer, the drifters and the serpent are dropped and the wordmark and fade remain; after 40 s of play at `?speed=6` a reload resumed at t=231.9 in zone 4 from a saved t=229.5.
+- Final sanity run: 20 s of ordinary play, 1262 frames, 100 pooled entities, quality tier 0, 2.52 MB of offscreen surfaces, 18 layers, 10 of 92 glossary entries seen, no console output.
+- Needs device check: that the fade into the scene has no seam at real frame rate, that the wordmark reads at phone size, and that returning within five minutes feels like resuming rather than restarting.

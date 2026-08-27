@@ -153,6 +153,12 @@ export function init() {
   addUpdater(step, -100);
 }
 
+/** Seek to an arbitrary point in the run — the stage 12 depth resume. */
+export function seek(t) {
+  cam.t = ((t % RUN) + RUN) % RUN;
+  step(0);
+}
+
 /** Used by the debug menu's jump-to-zone. */
 export function jumpToZone(index) {
   cam.t = timeForZone(Math.max(0, Math.min(N_ZONES - 1, index | 0)));
