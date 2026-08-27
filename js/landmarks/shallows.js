@@ -8,6 +8,12 @@ import { dither, profile, sampleProfile, fillBelow, fillAbove, blade, floorWorld
 const CEIL_Y = 5;            // world y of the mean surface film
 let sand = null, grass = [], shells = [];
 
+/**
+ * A travelling gust, driven by the seagrass vignette in stage 8: `amount` is
+ * how flat the bed is laid and `at` is the screen x the wave front has reached.
+ */
+export const gust = { amount: 0, at: 0 };
+
 export function ceilingY() { return CEIL_Y; }
 
 function build() {
@@ -53,10 +59,13 @@ function drawGrass(c) {
     const x = screenX(g.x, 1);
     if (x < -10 || x > app.iw + 10) continue;
     const baseY = top + sampleProfile(sand, x + cam.x, world.wrapW);
+    // The gust flattens each clump as the wave front passes over it.
+    const hit = gust.amount > 0
+      ? Math.max(0, 1 - Math.abs(x - gust.at) / 72) * gust.amount : 0;
     for (let i = 0; i < g.n; i++) {
       const bx = x + i * 2 - g.n;
-      blade(c, bx, baseY, g.h + (i % 3), 3.2, t * 1.1 + g.ph + i * 0.7,
-        i % 2 ? P.seagrass : P.kelp2, 1);
+      blade(c, bx, baseY, (g.h + (i % 3)) * (1 - hit * 0.78), 3.2 + hit * 14,
+        t * 1.1 + g.ph + i * 0.7, i % 2 ? P.seagrass : P.kelp2, 1);
     }
   }
 }

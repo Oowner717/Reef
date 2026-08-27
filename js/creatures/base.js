@@ -131,6 +131,14 @@ export function defineSpecies(o) {
     ...o,
   };
   if (SPECIES.some((s) => s.id === def.id)) console.warn('duplicate species id', def.id);
+  if (def.behaviourId === 'schooling' && def.tune) {
+    // A school whose separation radius is smaller than its own sprite packs
+    // into one solid blob. Floor it at roughly the sprite width, and give the
+    // seed spread enough room that the flock does not start inside itself.
+    const px = def.size || 8;
+    def.tune.sepR = Math.max(def.tune.sepR || 0, px * 0.85);
+    def.tune.spread = Math.max(def.tune.spread || 0, px * 3.2);
+  }
   SPECIES.push(def);
   return def;
 }

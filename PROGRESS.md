@@ -10,7 +10,7 @@
 | 5 | complete | 0.6.0 |
 | 6 | complete | 0.7.0 |
 | 7 | complete | 0.8.0 |
-| 8 | not started | - |
+| 8 | complete | 0.9.0 |
 | 9 | not started | - |
 | 10 | not started | - |
 | 11 | not started | - |
@@ -91,3 +91,13 @@
 - Fixed: the moray declared `renderChain` but runs the ambush behaviour, which never builds a spine — a null dereference every frame it was on screen. It now has its own renderer that trails its body back into its hole.
 - Verified headlessly: no errors at any depth; 77-104 live entities with the right species per band; `?density=` scales 56 / 104 / 117 across 0.3 / 1 / 2 and is bounded by the band caps; screenshots show a busy reef, a populated drop-off around the wreck, and midnight carrying only krill, glow jellies and a siphonophore.
 - Needs device check: that nothing is ever seen appearing or disappearing during a full run, that the frame budget holds with ~100 entities, and that per-frame allocation really is near zero (index loops, a shared spawn-position object, cached sprite keys and typed-array flocks, but only a device profile can confirm it).
+
+## Stage 8
+- Built: `js/save.js` (one versioned blob, debounced 2 s writes, flush on visibilitychange/pagehide/freeze, corrupt saves backed up rather than crashed on, silent in-memory fallback), `js/bag.js` (shuffled bag with no-immediate-repeat across reshuffles and a `sync()` for when the item list grows), `js/vignettes/{base,fx,director}.js` and the fifteen zone 1-3 vignettes.
+- Decided: vignettes drive their actors by writing positions after the spawner has run (director at updater order 20, spawner at 10), so no earlier module needed a hook for hand-over. Actors are promoted from what is already on screen where possible and spawned only when they must be.
+- Decided: a vignette may declare `can()`. The three staged on the surface film refuse to play once the ceiling has scrolled out of frame, and the cleaning station refuses when its rock is off screen — the director takes the next in the bag instead of playing a scene against nothing.
+- Decided: `js/vignettes/fx.js` is a small hard-capped pool for set-piece particles only. Stage 14's `js/particles.js` is the ambient system and is separate.
+- Fixed three defects in earlier files, all of which broke things stage 8 depends on: `?start=1` skipped the entire surface linger, so the ceiling was never in view (camera.js); schooling species had a separation radius smaller than their own sprite and packed into solid blobs (base.js now floors it at the sprite width); and the reef arches drew as square goal posts rather than rock (reef.js).
+- Hooks added to stage 5 landmarks for staging: `gust` on the shallows, `stationInView()` on the reef, `wreckScreen()` on the drop-off.
+- Verified with a real-time Chromium/CDP driver (new, in the scratchpad — the virtual-time harness cannot run long enough for a scene to play): all fifteen trigger and reach their peak frame with no console output; a 50 s run of ordinary play completed `ray-burial` then `octopus-hunt`, wrote 700 bytes of save, and shuffled all seven bags; `?vignette=lionfish-fan` jumps the camera to its zone and plays it.
+- Needs device check: whether each beat is legible in a few seconds to someone who does not know what it is, and whether the fx particle counts hold the frame budget during a payoff.

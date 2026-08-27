@@ -80,6 +80,9 @@ export function progressAt(t) {
  * of a zone. The view is one band tall, so that is simply progress index/6.
  */
 export function timeForZone(index) {
+  // Zone 1 means the surface, and the surface means the linger: starting at the
+  // instant the descent begins would skip the only 20 s the ceiling is in view.
+  if (index <= 0) return 0;
   const target = Math.min(1, Math.max(0, index / (N_ZONES - 1)));
   return LINGER + legTimeFor(target) * LEG;
 }

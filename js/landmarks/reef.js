@@ -16,6 +16,11 @@ defineSprite('station-rock', { map: map({ b: 'rock2', l: 'greyPale', d: 'rock1' 
 let bed = null, corals = [], anemones = [], kelp = [], arches = [], station = null;
 
 export function stationPos() { return station; }
+/** True while the cleaning-station rock is in frame — the vignette needs it. */
+export function stationInView() {
+  const x = screenX(station.x, 1), y = screenY(station.y, 1);
+  return x > 24 && x < app.iw - 24 && y > 20 && y < app.ih - 20;
+}
 
 function build() {
   const seed = dailySeed() + 21;
@@ -49,12 +54,26 @@ function drawArches(c) {
     const x = screenX(a.x, 1);
     if (x < -a.w - 8 || x > app.iw + a.w + 8) continue;
     const base = top + sampleProfile(bed, x + cam.x, world.wrapW);
+    // Rock, not masonry: the legs thicken toward the floor and the span sags
+    // in the middle, or it reads as a goal post.
     c.fillStyle = dither(c, 'rock1', 'rock2', 0.4);
-    c.fillRect(x | 0, (base - a.h) | 0, 5, a.h);
-    c.fillRect((x + a.w) | 0, (base - a.h) | 0, 5, a.h);
-    c.fillRect(x | 0, (base - a.h - 5) | 0, (a.w + 5) | 0, 5);
+    for (let i = 0; i < a.h; i++) {
+      const t = i / a.h;
+      const wdt = 4 + t * 5;
+      c.fillRect((x - wdt * 0.5) | 0, (base - i) | 0, wdt | 0, 1);
+      c.fillRect((x + a.w - wdt * 0.5) | 0, (base - i) | 0, wdt | 0, 1);
+    }
+    for (let i = 0; i <= a.w; i++) {
+      const u = i / a.w;
+      const sag = Math.sin(u * Math.PI) * 4;
+      const th = 4 + Math.sin(u * Math.PI) * 3;
+      c.fillRect((x + i) | 0, (base - a.h - th + sag) | 0, 1, th | 0);
+    }
     c.fillStyle = P.rock2;
-    c.fillRect(x | 0, (base - a.h - 5) | 0, (a.w + 5) | 0, 1);
+    for (let i = 0; i <= a.w; i++) {
+      const u = i / a.w;
+      c.fillRect((x + i) | 0, (base - a.h - (4 + Math.sin(u * Math.PI) * 3) + Math.sin(u * Math.PI) * 4) | 0, 1, 1);
+    }
   }
 }
 

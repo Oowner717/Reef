@@ -34,6 +34,11 @@ import * as midnight from './landmarks/midnight.js';
 import * as vents from './landmarks/vents.js';
 import './creatures/travellers.js';
 import * as spawner from './spawner.js';
+import * as saveMod from './save.js';
+import './vignettes/zone1.js';
+import './vignettes/zone2.js';
+import './vignettes/zone3.js';
+import * as vignettes from './vignettes/director.js';
 
 export const app = {
   iw: 0, ih: 0, scale: 1, dpr: 1, rotated: false,
@@ -242,7 +247,7 @@ if (mq && mq.addEventListener) mq.addEventListener('change', readMotion);
 // `init()` that runs here once the canvas exists. Registering from a module's
 // top level instead would touch this file's bindings while they are still in
 // their temporal dead zone. Each stage adds one import and one entry below.
-const MODULES = [camera, water, shallows, reefLand, dropoff, openLand, twilight, midnight, vents, spawner,
+const MODULES = [saveMod, camera, water, shallows, reefLand, dropoff, openLand, twilight, midnight, vents, spawner, vignettes,
   panel, buttons, fps, debugMenu, debugScene];
 
 try {

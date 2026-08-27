@@ -36,10 +36,14 @@ function morayRender(c, ctx) {
   const n = c.def.tune.segments;
   const hx = c.sx(), hy = c.sy();
   const bx = screenX(c.homeX, c.def.layer || 1), by = screenY(c.homeY, c.def.layer || 1);
+  // Segments sit at a fixed spacing back from the head, so the body is
+  // continuous however far out of its hole the eel has lunged.
+  const dx = bx - hx, dy = by - hy;
+  const d = Math.hypot(dx, dy) || 1;
+  const step = Math.min(c.def.tune.segLen, d / Math.max(1, n - 1));
   for (let i = n - 1; i >= 0; i--) {
-    const t = i / (n - 1);
-    const x = hx + (bx - hx) * t;
-    const y = hy + (by - hy) * t + Math.sin(c.phase * 2 - i * 0.7) * 1.4 * (1 - t);
+    const x = hx + (dx / d) * step * i;
+    const y = hy + (dy / d) * step * i + Math.sin(c.phase * 2 - i * 0.7) * 1.4 * (1 - i / n);
     drawSpriteC(ctx, 'moray', i === 0 ? 0 : 1, x | 0, y | 0, c.face < 0);
   }
 }
@@ -102,7 +106,7 @@ export const MORAY = defineSpecies({
   size: 26, fps: 5, behaviour: B.ambush, behaviourId: 'ambush', render: morayRender,
   note: 'Holds its mouth open to breathe, which is why it always looks like a threat.',
   depth: [0.74, 0.86], maxAlive: 1, count: 1,
-  tune: { reach: 16, emerge: 0.5, watch: 1.8, withdraw: 0.7, hide: 3.2, segments: 5, segLen: 4 },
+  tune: { reach: 16, emerge: 0.5, watch: 1.8, withdraw: 0.7, hide: 3.2, segments: 7, segLen: 3.5 },
 });
 
 export const SEAHORSE = defineSpecies({

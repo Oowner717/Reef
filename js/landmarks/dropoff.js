@@ -13,6 +13,14 @@ let face = null, fans = [], wreck = null, shelfTop = 0;
 export function wallSide() { return side; }
 export function wreckPos() { return wreck; }
 
+const WRECK_L = 118;
+/** Screen-space centre of the wreck, for the stage 8 vignettes staged on it. */
+export function wreckScreen() {
+  const cx = side < 0 ? wreck.out * app.iw + WRECK_L * 0.1
+    : app.iw - wreck.out * app.iw - WRECK_L * 0.1;
+  return { x: cx, y: screenY(wreck.y, 1), len: WRECK_L, side };
+}
+
 function build() {
   const seed = dailySeed() + 31;
   const r = rng(seed);
@@ -66,7 +74,7 @@ function drawFans(c) {
 function drawWreck(c) {
   const cy = screenY(wreck.y, 1);
   if (cy < -60 || cy > app.ih + 60) return;
-  const L = 118, H = 30;
+  const L = WRECK_L, H = 30;
   const cx = side < 0 ? wreck.out * app.iw + L * 0.1 : app.iw - wreck.out * app.iw - L * 0.1;
   const x0 = cx - L / 2;
   const tilt = wreck.tilt * side;
