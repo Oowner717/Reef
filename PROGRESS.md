@@ -6,7 +6,7 @@
 | 1 | complete | 0.2.0 |
 | 2 | complete | 0.3.0 |
 | 3 | complete | 0.4.0 |
-| 4 | not started | - |
+| 4 | complete | 0.5.0 |
 | 5 | not started | - |
 | 6 | not started | - |
 | 7 | not started | - |
@@ -55,3 +55,11 @@
 - Verified headlessly: no errors; the menu renders all sections with values right-aligned and a scroll indicator; the counter reads top-left; the magnifier sits bottom-right at 15%; the diagnostics blob builds at 594 bytes with env/display/frame/run/memory/layers/log sections.
 - Deferred: forcing a tier changes `perf.tier` but nothing sheds yet — particles and bloom arrive at stage 14 and density at stage 7, and both read `tierParams()`.
 - Needs device check: that the counter costs nothing measurable; that the governor actually sheds and restores when the phone is loaded; that the magnifier is faint enough to ignore but hittable; that panel scrolling never rubber-bands the page behind it; that Copy diagnostics reaches the iOS clipboard.
+
+## Stage 4
+- Built: `js/boids.js` (typed-array flock, rotating neighbour window so cost stays linear past 24 members, turn-rate cap so a school banks rather than snaps), `js/behaviours.js` (all twelve types plus the `renderFlock` and `renderChain` draw helpers), `js/creatures/base.js` (the poolable `Creature`, `makePool`), `js/debug/scene.js` (the proving ground behind `?debug=behaviours`).
+- Decided: one `Creature` is one entity — a solo animal or a whole school — so pooling stays simple and a 60-strong bait ball costs one pool slot. Per-behaviour scratch lives in `c.d`, cleared rather than reallocated on spawn.
+- Decided: a behaviour may drive its own animation frame via `c.d.frame` (pulsing does) or scale the frame rate via `c.fpsMul` (cruising, flapping, jetting), so the sprite step follows the motion.
+- Decided: debug-scene creatures use parallax layer 0, which makes world coordinates screen coordinates, so each demo can be penned into its own cell without a second coordinate system.
+- Verified headlessly: no errors; all twelve run at once and read as distinct — a tight schooling ball, a wide-turning cruiser, an S-rippling chain, a beat-and-glide wing, a pink pulsing bell, a lime jetting squid, three differently-coloured round demos for hovering/grazing/ambush, a skimming fish at its ceiling, a spinning faller and a diving bird that punches through and exits.
+- Needs device check: whether each of the twelve still reads as its own thing in motion at 60 fps on a phone-sized screen, and whether the tuning rates feel right rather than merely different.

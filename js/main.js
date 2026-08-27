@@ -17,6 +17,7 @@ import * as fps from './fps.js';
 import * as buttons from './ui/buttons.js';
 import * as panel from './ui/panel.js';
 import * as debugMenu from './debug/menu.js';
+import * as debugScene from './debug/scene.js';
 
 export const app = {
   iw: 0, ih: 0, scale: 1, dpr: 1, rotated: false,
@@ -225,7 +226,7 @@ if (mq && mq.addEventListener) mq.addEventListener('change', readMotion);
 // `init()` that runs here once the canvas exists. Registering from a module's
 // top level instead would touch this file's bindings while they are still in
 // their temporal dead zone. Each stage adds one import and one entry below.
-const MODULES = [camera, water, panel, buttons, fps, debugMenu];
+const MODULES = [camera, water, panel, buttons, fps, debugMenu, debugScene];
 
 try {
   if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(() => {});
