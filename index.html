@@ -15,6 +15,9 @@
 </head>
 <body>
 <canvas id="reef"></canvas>
+<!-- Loaded first so its ring buffer catches anything thrown while the rest of
+     the app is still evaluating. -->
+<script type="module" src="js/debug/diagnostics.js"></script>
 <script type="module" src="js/main.js"></script>
 </body>
 </html>

@@ -5,7 +5,7 @@
 | 0 | complete | 0.1.0 |
 | 1 | complete | 0.2.0 |
 | 2 | complete | 0.3.0 |
-| 3 | not started | - |
+| 3 | complete | 0.4.0 |
 | 4 | not started | - |
 | 5 | not started | - |
 | 6 | not started | - |
@@ -45,3 +45,13 @@
 - Decided: zone height is clamped so the strip never exceeds 4000 px, and colour depth is normalised against `7*zoneH` so zone `i` always starts at `i/7` of the ramp even when the clamp bites.
 - Verified headlessly: no errors; `?start=4` lands at depth 0.501, zone `open`, 0.51 through the band; the progress curve reads 0 / 0 / 0.282 / 0.499 / 1 / 1 / 0.501 / 0.002 at t = 0/20/60/90/160/179/250/319; strip 215x2275 = 1.87 MB; screenshots of zones 1, 3, 5 and 7 are clearly distinct with visible dither transitions and the warm floor cast.
 - Needs device check: that `?speed=10` reads as one smooth continuous fall with no stutter at the linger-to-leg easings, and that the dither texture is not busy at real pixel density.
+
+## Stage 3
+- Built: `js/perf.js` (2 s rolling window, average and the mean of the worst 1% of frame intervals, the four-tier governor with 3 s/20 s hysteresis and a `addTierHold` freeze for vignette payoffs and hold frames), `js/fps.js`, `js/ui/buttons.js` (the cluster, the shared 3 s-full/1 s-fade behaviour, safe-area insets measured from `env()`), `js/ui/panel.js` (the overlay shell), `js/ui/rows.js`, `js/debug/{registry,menu,diagnostics}.js`.
+- Decided: an extra module, `js/ui/rows.js`, holds the shared section/label/value row renderer. Folding it into `panel.js` would have pushed that file past the 250-line rule, and the glossary and settings panels both need it.
+- Decided: panel scrolling is a transparent native-scroll `div` laid over the content area only, read back into the canvas each frame — that is what "re-enable touch-action inside the panel only" means when the panel is drawn on a canvas. Taps that follow a drag of more than 6 px are ignored.
+- Decided: layer toggles are generated from `layerNames()` rather than registered, so every later stage's layer appears in the menu for free; `ui-panel` is excluded so the panel cannot hide itself.
+- Decided: `js/debug/diagnostics.js` is loaded by `index.html` before `main.js` and imports nothing heavy, so its ring buffer really is first; every other section reaches it through `addProvider` instead.
+- Verified headlessly: no errors; the menu renders all sections with values right-aligned and a scroll indicator; the counter reads top-left; the magnifier sits bottom-right at 15%; the diagnostics blob builds at 594 bytes with env/display/frame/run/memory/layers/log sections.
+- Deferred: forcing a tier changes `perf.tier` but nothing sheds yet — particles and bloom arrive at stage 14 and density at stage 7, and both read `tierParams()`.
+- Needs device check: that the counter costs nothing measurable; that the governor actually sheds and restores when the phone is loaded; that the magnifier is faint enough to ignore but hittable; that panel scrolling never rubber-bands the page behind it; that Copy diagnostics reaches the iOS clipboard.

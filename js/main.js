@@ -12,6 +12,11 @@ import { VERSION } from './version.js';
 // before the atlas is built. Initialised in MODULES at the foot of this file.
 import * as camera from './camera.js';
 import * as water from './water.js';
+import * as perfMod from './perf.js';
+import * as fps from './fps.js';
+import * as buttons from './ui/buttons.js';
+import * as panel from './ui/panel.js';
+import * as debugMenu from './debug/menu.js';
 
 export const app = {
   iw: 0, ih: 0, scale: 1, dpr: 1, rotated: false,
@@ -29,6 +34,7 @@ const resizers = [];
 const taps = [];      // { order, fn(x, y) -> true if consumed }
 let perfHook = null;
 let uiFade = () => 0.15;
+let stampAnchor = null;
 
 /** Register a draw layer. Order is back-to-front; see DESIGN.md section 2. */
 export function addLayer(name, order, draw) {
@@ -52,6 +58,8 @@ export function addTapHandler(fn, order = 0) {
 export function setPerfHook(fn) { perfHook = fn; }
 /** Stage 3's button cluster owns the shared fade; the version stamp joins it. */
 export function setUiFadeSource(fn) { uiFade = fn; }
+/** ...and the same safe-area inset, so the stamp clears the home indicator. */
+export function setStampAnchor(fn) { stampAnchor = fn; }
 
 // --- layout -----------------------------------------------------------------
 
@@ -141,7 +149,8 @@ function stop() {
 function drawVersionStamp() {
   const a = uiFade();
   if (a <= 0.01) return;
-  text(ctx, VERSION, 3, app.ih - 8, P.silver, a);
+  const at = stampAnchor ? stampAnchor() : null;
+  text(ctx, VERSION, at ? at[0] : 3, at ? at[1] : app.ih - 8, P.silver, a);
 }
 
 // --- stage 1 test sprite ----------------------------------------------------
@@ -216,12 +225,13 @@ if (mq && mq.addEventListener) mq.addEventListener('change', readMotion);
 // `init()` that runs here once the canvas exists. Registering from a module's
 // top level instead would touch this file's bindings while they are still in
 // their temporal dead zone. Each stage adds one import and one entry below.
-const MODULES = [camera, water];
+const MODULES = [camera, water, panel, buttons, fps, debugMenu];
 
 try {
   if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(() => {});
 } catch (_) { /* iOS ignores orientation lock; the canvas rotates instead */ }
 
+setPerfHook(perfMod.sample);
 rasteriseAll();
 layout();
 for (const m of MODULES) m.init(app);
