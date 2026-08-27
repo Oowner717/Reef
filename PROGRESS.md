@@ -7,7 +7,7 @@
 | 2 | complete | 0.3.0 |
 | 3 | complete | 0.4.0 |
 | 4 | complete | 0.5.0 |
-| 5 | not started | - |
+| 5 | complete | 0.6.0 |
 | 6 | not started | - |
 | 7 | not started | - |
 | 8 | not started | - |
@@ -63,3 +63,12 @@
 - Decided: debug-scene creatures use parallax layer 0, which makes world coordinates screen coordinates, so each demo can be penned into its own cell without a second coordinate system.
 - Verified headlessly: no errors; all twelve run at once and read as distinct — a tight schooling ball, a wide-turning cruiser, an S-rippling chain, a beat-and-glide wing, a pink pulsing bell, a lime jetting squid, three differently-coloured round demos for hovering/grazing/ambush, a skimming fish at its ceiling, a spinning faller and a diving bird that punches through and exits.
 - Needs device check: whether each of the twelve still reads as its own thing in motion at 60 fps on a phone-sized screen, and whether the tuning rates feel right rather than merely different.
+
+## Stage 5
+- Built: `js/sprites/shapes.js` (parametric grid builders: fish, ray, bell, blob, star, segment), `js/creatures/{zone1,zone2,zone3}.js` (all 22 zone 1-3 residents with sprites, tuning and glossary metadata), `js/landmarks/{common,shallows,reef,dropoff}.js` (surface ceiling, sand flats, seagrass, shells, reef floor, coral heads, anemones, kelp, arches, the cleaning-station rock, the wall, gorgonian fans and the wreck), and the temporary `js/creatures/spawn-temp.js`.
+- Decided: sprite grids are generated from a few measurements by `shapes.js` rather than typed as sixty character blocks. It is still pixel data defined in code, the style stays uniform across the roster, and each species file stays well under 250 lines. Sprite definitions therefore live beside their species in `js/creatures/zoneN.js`, not in a separate `js/sprites/zoneN.js` as stage 0 assumed.
+- Decided: terrain is drawn as merged integer-height column runs, never as filled paths — a path edge on a 215 px canvas is an anti-aliased smear once it is upscaled 5x, which would break the hard-pixel rule.
+- Decided: a seabed is a bounded ledge, not a fill to the screen bottom, so descending past it shows water again instead of a screenful of rock. The drop-off wall is locked to a screen side rather than a world x, because a wall has no far end for the sideways current to drift past.
+- Decided: every species declares itself into `SPECIES` in `js/creatures/base.js`, glossary metadata included, so stage 10's registry can wrap one existing list rather than refactoring a second one into being.
+- Verified headlessly: no errors; 39 sprites in one 1 MB atlas page; screenshots of all three zones read at a glance — bright shallows with sand flats, seagrass, a stingray, hermit crabs and sea stars under a rippling ceiling; a reef of coral heads, kelp and a tang school; and the drop-off with gorgonian fans down the wall and the wreck tilted on the slope with lit portholes and a broken mast.
+- Needs device check: whether three size bands really read at once in each zone at phone scale, whether the wreck lands as a landmark you notice rather than scroll past, and whether the reef floor's sand-on-rock dither is too busy.

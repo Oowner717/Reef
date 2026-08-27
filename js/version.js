@@ -1,4 +1,4 @@
 // Single source of truth for the version. Written by tools/set-version.mjs.
 // Nothing else in the app hard-codes a version number.
-export const VERSION = '0.5.0';
-export const BUILD = '25mr4j';
+export const VERSION = '0.6.0';
+export const BUILD = 'k3dvsy';

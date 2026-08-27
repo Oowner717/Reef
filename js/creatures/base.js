@@ -109,6 +109,35 @@ export class Creature {
   }
 }
 
+// --- the species table ------------------------------------------------------
+// Every species declares itself here, glossary metadata included, so the
+// spawner, the vignette director and (from stage 10) the glossary all read one
+// list and nothing is hand-maintained twice.
+
+export const SPECIES = [];
+
+export function defineSpecies(o) {
+  const def = {
+    frames: 2, fps: 7, layer: 1, weight: 1, band: 'small',
+    depth: [0.15, 0.9], maxAlive: 1, ambient: true, kind: 'creature',
+    ...o,
+  };
+  if (SPECIES.some((s) => s.id === def.id)) console.warn('duplicate species id', def.id);
+  SPECIES.push(def);
+  return def;
+}
+
+export function speciesById(id) { return SPECIES.find((s) => s.id === id) || null; }
+export function speciesForZone(z) { return SPECIES.filter((s) => s.zones.indexOf(z) >= 0); }
+
+/** The standard palette map for a generated grid. */
+export function map(o) {
+  return {
+    '.': null, k: o.k || 'outline', b: o.b, l: o.l || o.b, d: o.d || o.b,
+    f: o.f || o.b, e: o.e || 'outline', g: o.g || 'white',
+  };
+}
+
 // --- pooling ----------------------------------------------------------------
 
 /** A fixed-size pool. At the cap the oldest live entity is recycled. */
