@@ -9,7 +9,7 @@
 | 4 | complete | 0.5.0 |
 | 5 | complete | 0.6.0 |
 | 6 | complete | 0.7.0 |
-| 7 | not started | - |
+| 7 | complete | 0.8.0 |
 | 8 | not started | - |
 | 9 | not started | - |
 | 10 | not started | - |
@@ -81,3 +81,13 @@
 - Decided: custom renders carry what a sprite grid cannot — the anglerfish's lure on its stalk, the dragonfish's red beam, the bigfin squid's right-angled arms, the whale shark's remoras and pilot fish, and the tube worm bed's retracting plumes.
 - Verified headlessly: no errors; 66 sprites still in one 1 MB atlas page, with the 170x54 whale shark rasterised intact; zone 4 reads empty with the whale shark dwarfing the hammerheads, zone 6 is dark with only bioluminescence and the bigfin's arms, zone 7 is warm with lit smoker crowns and the ribbed whale fall on its bacterial mat.
 - Needs device check: whether zone 4's emptiness reads as deliberate rather than unfinished, whether zone 6 is legible at all at phone brightness, and whether the smoker plumes are too heavy over the top of the band.
+
+## Stage 7
+- Built: `js/creatures/travellers.js` (all ten travellers, including a vertical-chain behaviour for the siphonophore, which hangs rather than swims) and `js/spawner.js` (per-species depth ranges, an active window that reaches 2.8 screens ahead in the direction of travel and 1.3 behind, off-screen-only spawning, retirement well outside it, band caps and pooling). Deleted `js/creatures/spawn-temp.js`.
+- Decided: the population target is scaled up for small life, because the window is four screens tall and nearly two wide — a target of "maxAlive in the window" leaves a quarter of that in view. Large animals are not scaled and Huge is hard-limited to one anywhere near the camera.
+- Decided: the initial fill (and any camera jump) is allowed to place creatures on screen, because at a cold start there is no "in view" to protect; every subsequent spawn lands outside the visible rect, and nothing is retired while `onScreen(40)` is true.
+- Decided: spawn x is biased to within about a screen width of the camera. Uniform placement across the four-screen wrap left three quarters of the roster permanently unseen.
+- Decided: the species sweep starts from a rotating offset each tick, so a band at its cap does not permanently starve whatever sits last in the table.
+- Fixed: the moray declared `renderChain` but runs the ambush behaviour, which never builds a spine — a null dereference every frame it was on screen. It now has its own renderer that trails its body back into its hole.
+- Verified headlessly: no errors at any depth; 77-104 live entities with the right species per band; `?density=` scales 56 / 104 / 117 across 0.3 / 1 / 2 and is bounded by the band caps; screenshots show a busy reef, a populated drop-off around the wreck, and midnight carrying only krill, glow jellies and a siphonophore.
+- Needs device check: that nothing is ever seen appearing or disappearing during a full run, that the frame budget holds with ~100 entities, and that per-frame allocation really is near zero (index loops, a shared spawn-position object, cached sprite keys and typed-array flocks, but only a device profile can confirm it).

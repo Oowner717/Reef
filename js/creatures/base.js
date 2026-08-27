@@ -24,6 +24,7 @@ export class Creature {
     this.variant = null;
     this.flock = null;
     this.spineX = null; this.spineY = null;
+    this._key = null; this._keyFor = null;
     this.d = {};              // behaviour scratch, reused across spawns
     this.vignette = null;     // set while promoted into a set piece
   }
@@ -71,7 +72,14 @@ export class Creature {
   }
 
   spriteKey() {
-    return this.variant ? this.def.sprite + ':' + this.variant : this.def.sprite;
+    // Cached: this is called for every live entity every frame, and building
+    // the variant key by concatenation each time is a per-frame allocation.
+    if (!this.variant) return this.def.sprite;
+    if (this._keyFor !== this.variant) {
+      this._keyFor = this.variant;
+      this._key = this.def.sprite + ':' + this.variant;
+    }
+    return this._key;
   }
 
   frameIndex() {

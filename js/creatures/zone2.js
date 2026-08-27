@@ -1,5 +1,6 @@
 // Zone 2 — Coral Reef. The busiest band: warm reef fish over coral colour.
-import { defineSprite, defineVariant } from '../sprites.js';
+import { defineSprite, defineVariant, drawSpriteC } from '../sprites.js';
+import { screenX, screenY } from '../camera.js';
 import { fish, blob, bell, segment } from '../sprites/shapes.js';
 import { defineSpecies, map } from './base.js';
 import * as B from '../behaviours.js';
@@ -25,6 +26,23 @@ defineSprite('moray', { map: map({ b: 'kelp2', l: 'kelp1', d: 'outline', e: 'acc
 defineSprite('octopus', { map: map({ b: 'coral1', l: 'coral2', f: 'coral1', e: 'accYellow' }), frames: blob({ w: 14, h: 16, eyes: true, arms: 5, armLen: 7 }) });
 defineVariant('octopus', 'hot', map({ b: 'accOrange', l: 'accYellow', f: 'accOrange', e: 'outline' }));
 defineVariant('octopus', 'rock', map({ b: 'rock2', l: 'rock1', f: 'rock2', e: 'accYellow' }));
+
+/**
+ * The moray is an ambush animal drawn as a chain: the head lunges out of its
+ * hole and the body trails back into it. `renderChain` cannot serve here —
+ * that draws a spine, and only the undulating behaviour builds one.
+ */
+function morayRender(c, ctx) {
+  const n = c.def.tune.segments;
+  const hx = c.sx(), hy = c.sy();
+  const bx = screenX(c.homeX, c.def.layer || 1), by = screenY(c.homeY, c.def.layer || 1);
+  for (let i = n - 1; i >= 0; i--) {
+    const t = i / (n - 1);
+    const x = hx + (bx - hx) * t;
+    const y = hy + (by - hy) * t + Math.sin(c.phase * 2 - i * 0.7) * 1.4 * (1 - t);
+    drawSpriteC(ctx, 'moray', i === 0 ? 0 : 1, x | 0, y | 0, c.face < 0);
+  }
+}
 
 export const TANG = defineSpecies({
   id: 'tang', name: 'Yellow Tang', zones: [1], band: 'small', sprite: 'tang',
@@ -81,7 +99,7 @@ export const OCTOPUS = defineSpecies({
 
 export const MORAY = defineSpecies({
   id: 'moray', name: 'Moray Eel', zones: [1], band: 'medium', sprite: 'moray',
-  size: 26, fps: 5, behaviour: B.ambush, behaviourId: 'ambush', render: B.renderChain,
+  size: 26, fps: 5, behaviour: B.ambush, behaviourId: 'ambush', render: morayRender,
   note: 'Holds its mouth open to breathe, which is why it always looks like a threat.',
   depth: [0.74, 0.86], maxAlive: 1, count: 1,
   tune: { reach: 16, emerge: 0.5, watch: 1.8, withdraw: 0.7, hide: 3.2, segments: 5, segLen: 4 },
