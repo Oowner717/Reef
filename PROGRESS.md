@@ -13,7 +13,7 @@
 | 8 | complete | 0.9.0 |
 | 9 | complete | 0.10.0 |
 | 10 | complete | 0.11.0 |
-| 11 | not started | - |
+| 11 | complete | 0.12.0 |
 | 12 | not started | - |
 | 13 | not started | - |
 
@@ -119,3 +119,12 @@
 - Verified with CDP: 92 entries across nine sections (49 creatures by zone, 10 travellers, 33 scenes); `?seen=all` unlocks everything; unlocked rows animate with name, zone dots and size band; locked rows are dark silhouettes with dashed names; tapping expands to where it lives, how it moves and the note, wrapped inside the panel; scrolling works; seen state writes to localStorage.
 - Deferred: the Mythicals section is empty until stage 15 registers the seven. The stats line reads zeros until stage 11 starts tracking them.
 - Needs device check: that the shell is unnoticeable until looked for, that the notification dot reads, that scrolling inside the panel never moves the page behind it, and that seen state survives closing the app on the phone.
+
+## Stage 11
+- Built: `js/settings/settings.js` (the precedence chain, eleven rows, live apply, stats and the run position) and `js/settings/panel.js` (the rows in the shared shell, the override dot and footer, the two-step Reset, and the About section), plus the pixel dial added to the existing cluster.
+- Decided: an overridden row is dimmed, dotted and inert rather than silently ignoring taps, and the footer names which rows the URL owns. A person who changes a setting and sees nothing happen now gets an explanation instead of a mystery.
+- Decided: `applyAll()` skips overridden rows. Journey speed and creature density are multipliers already carried by `cfg`, so applying the session value again would square them.
+- Fixed: `settings` initialised before `fps`, so `fps.init()`'s own `fpsState.on = cfg.fps` overwrote the value the save had just restored. The wiring block now runs settings after every module it applies into, with a comment saying why.
+- Stats: runs increment on the camera's run-end hook, watched time accumulates every frame, deepest zone tracks the maximum reached, and the run position is written on the same 2 s debounce — which is what stage 12's depth resume and a silent Safari reload both need.
+- Verified with CDP: three settings changed, written to the save, and still in force after a reload, with `fpsOn / densityMul / app.reduced` all live. A five-case robustness suite injected before the app's first line — normal, corrupt save, future schema version, `localStorage` throwing on every access, and `?save=0` — runs clean in all five: the corrupt and future saves are backed up and the app starts fresh, storage-denied falls back to memory with zero writes, and every case keeps rendering with a full population and no console errors.
+- Needs device check: that each row's change is visible immediately on the phone, that the two-step Reset reads clearly, and that the dial is distinguishable from the shell at 25% opacity.

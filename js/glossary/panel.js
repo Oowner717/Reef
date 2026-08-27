@@ -11,6 +11,7 @@ import { ZONES } from '../world.js';
 import { save } from '../save.js';
 import { sections, total, zoneEntries } from '../registry.js';
 import { isSeen, seenCount, seenState, clearFresh } from './seen.js';
+import { get as setting } from '../settings/settings.js';
 
 defineSprite('ui-shell', {
   map: { '.': null, k: 'outline', w: 'white' },
@@ -212,7 +213,7 @@ export function openGlossary() { openPanel(spec); }
 export function init() {
   addButton({
     id: 'glossary', order: 1, sprite: 'ui-shell', rest: 0.25,
-    visible: () => cfg.glossary,
+    visible: () => cfg.glossary && setting('glossaryButton') !== 'hide',
     badge: () => seenState.fresh > 0,
     badgeColour: P.bioCyan,
     onTap: openGlossary,
