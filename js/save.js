@@ -114,5 +114,5 @@ export function init() {
   const onHide = () => flush();
   document.addEventListener('visibilitychange', () => { if (document.hidden) flush(); });
   window.addEventListener('pagehide', onHide);
-  window.addEventListener('freeze', onHide);
+  document.addEventListener('freeze', onHide);
 }

@@ -6,7 +6,7 @@
 //
 // Writes js/version.js (version + a fresh build id) and the README stamp.
 // Stage 12 extends it to the manifest and the service worker cache name.
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -60,5 +60,30 @@ patch('README.md', /^\*\*Version:\*\*.*$/m, `**Version:** ${version}`, '"**Versi
 patch('sw.js', /const CACHE = '[^']*'/, `const CACHE = 'reef-v${version}-${build}'`, 'CACHE constant');
 
 patch('manifest.webmanifest', /"version"\s*:\s*"[^"]*"/, `"version": "${version}"`, '"version" field');
+
+// The precache list is regenerated from what is actually on disk, so it cannot
+// go stale as modules are added. Still a maintenance script, not a build step:
+// the app runs from source with nothing compiled.
+function walk(dir, out, base) {
+  for (const name of readdirSync(join(ROOT, dir)).sort()) {
+    if (name.startsWith('.')) continue;
+    const rel = dir ? `${dir}/${name}` : name;
+    if (statSync(join(ROOT, rel)).isDirectory()) walk(rel, out, base);
+    else out.push(`./${rel}`);
+  }
+  return out;
+}
+
+if (existsSync(join(ROOT, 'sw.js'))) {
+  const files = ['./', './index.html', './style.css', './manifest.webmanifest'];
+  for (const dir of ['js', 'icons']) if (existsSync(join(ROOT, dir))) walk(dir, files);
+  const list = files.map((f) => `  '${f}',`).join('\n');
+  const src = readFileSync(join(ROOT, 'sw.js'), 'utf8');
+  const out = src.replace(
+    /(\/\/ PRECACHE-START[^\n]*\n)const PRECACHE = \[[\s\S]*?\];/,
+    `$1const PRECACHE = [\n${list}\n];`);
+  if (out !== src) writeFileSync(join(ROOT, 'sw.js'), out);
+  console.log(`precached ${files.length} files`);
+}
 
 console.log(`version ${version}  build ${build}`);

@@ -40,6 +40,24 @@ function density() {
   return cfg.density * spawner.densityMul * tierParams().density;
 }
 
+/**
+ * The visible band expressed in a parallax layer's own coordinates. A far layer
+ * moves at a fraction of the camera, so an "off screen" position worked out in
+ * layer-1 world coordinates can land a hammerhead in the middle of the frame.
+ */
+const view = { top: 0, bottom: 0, left: 0 };
+function layerView(L) {
+  if (!L || L === 1) {
+    view.top = cam.y; view.bottom = cam.y + app.ih; view.left = cam.x;
+    return view;
+  }
+  const k = app.ih * 0.5 * (1 - L);
+  view.top = cam.y + (0 - k) / L;
+  view.bottom = cam.y + (app.ih - k) / L;
+  view.left = cam.x * L;
+  return view;
+}
+
 const win = { top: 0, bottom: 0 };
 function activeWindow() {
   const back = app.ih * 1.3, ahead = app.ih * 2.8;
@@ -64,16 +82,17 @@ function spawnPos(s, anywhere) {
   const y0 = Math.max(win.top, r[0]), y1 = Math.min(win.bottom, r[1]);
   pos.ok = false;
   if (y1 <= y0) return pos;
+  const v = layerView(s.layer);
   if (anywhere) {
     // Cold start or a jump: there is no "in view" to protect yet, so fill the
     // whole window including the screen. Every later spawn is off-screen.
     pos.y = y0 + Math.random() * (y1 - y0);
-    pos.x = wrapX(cam.x + (Math.random() - 0.5) * app.iw * 1.7);
+    pos.x = wrapX(v.left + (Math.random() - 0.5) * app.iw * 1.7);
     pos.ok = true;
     return pos;
   }
-  const M = (s.size || 12) + 20;
-  const above = Math.min(y1, cam.y - M), below = Math.max(y0, cam.y + app.ih + M);
+  const M = ((s.size || 12) + 20) / (s.layer || 1);
+  const above = Math.min(y1, v.top - M), below = Math.max(y0, v.bottom + M);
   const canAbove = above > y0, canBelow = below < y1;
   // Prefer the side the camera is heading into, so it scrolls into view.
   const wantBelow = cam.descending ? canBelow : !canAbove;
@@ -83,14 +102,14 @@ function spawnPos(s, anywhere) {
     else pos.y = below + Math.random() * (y1 - below);
     // Near the camera horizontally: the world is four screens wide, so a
     // uniformly-placed animal would spend three quarters of its life unseen.
-    pos.x = wrapX(cam.x + (Math.random() - 0.5) * app.iw * 1.8);
+    pos.x = wrapX(v.left + (Math.random() - 0.5) * app.iw * 1.8);
   } else {
     // Its band is entirely on screen — come in from one side instead.
     pos.y = y0 + Math.random() * (y1 - y0);
     const side = Math.random() < 0.5 ? -1 : 1;
     const off = side > 0 ? app.iw + M + Math.random() * app.iw * 0.6
       : -M - Math.random() * app.iw * 0.6;
-    pos.x = wrapX(cam.x + off);
+    pos.x = wrapX(v.left + off);
   }
   pos.ok = true;
   return pos;
@@ -268,5 +287,5 @@ export function init() {
   addProvider('entities', 25, () => 'pool ' + pool.live() + '/' + POOL_CAP +
     '  bands ' + ['motes', 'small', 'medium', 'large', 'huge'].map((b) =>
       b + ' ' + (bandCounts[b] || 0) + '/' + BAND_CAP[b]).join(', ') +
-    '\\ndensity ' + density().toFixed(2) + '  species ' + table().length);
+    '\ndensity ' + density().toFixed(2) + '  species ' + table().length);
 }

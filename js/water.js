@@ -68,6 +68,10 @@ function draw(c) {
   }
 }
 
+/** Dropped on pagehide/freeze and rebuilt on resume — it is regenerable. */
+export function releaseStrip() { strip = null; stripW = 0; stripH = 0; }
+export function rebuildStrip() { if (!strip && app.iw) build(app.iw); }
+
 export function stripBytes() { return stripW * stripH * 4; }
 export function stripSize() { return { w: stripW, h: stripH }; }
 

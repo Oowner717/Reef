@@ -240,5 +240,5 @@ export function init() {
     (id) => trigger(id));
   addProvider('vignettes', 28, () => 'playing ' + (director.running ? director.running.v.id : 'none') +
     '  recent ' + (director.log.join(', ') || 'none') +
-    '\\nbags ' + bags.map((b, i) => i + ':' + b.remaining()).join(' '));
+    '\nbags ' + bags.map((b, i) => i + ':' + b.remaining()).join(' '));
 }

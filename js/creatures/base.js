@@ -170,11 +170,18 @@ export function makePool(cap) {
         const it = items[(cursor + i) % cap];
         if (!it.alive) { cursor = (cursor + i + 1) % cap; return it; }
       }
-      // At the cap: recycle the oldest.
-      let oldest = items[0];
-      for (const it of items) if (it.age > oldest.age) oldest = it;
-      oldest.retire();
-      return oldest;
+      // At the cap: recycle the oldest entity that is not currently on screen,
+      // so nothing is ever seen vanishing. Only if every slot is visible does
+      // the oldest overall give way.
+      let victim = null, fallback = items[0];
+      for (const it of items) {
+        if (it.age > fallback.age) fallback = it;
+        if (it.onScreen(24)) continue;
+        if (!victim || it.age > victim.age) victim = it;
+      }
+      const out = victim || fallback;
+      out.retire();
+      return out;
     },
     release(it) { it.retire(); },
     clear() { for (const it of items) it.retire(); },
