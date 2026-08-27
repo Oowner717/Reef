@@ -21,9 +21,17 @@ import * as debugScene from './debug/scene.js';
 import './creatures/zone1.js';
 import './creatures/zone2.js';
 import './creatures/zone3.js';
+import './creatures/zone4.js';
+import './creatures/zone5.js';
+import './creatures/zone6.js';
+import './creatures/zone7.js';
 import * as shallows from './landmarks/shallows.js';
 import * as reefLand from './landmarks/reef.js';
 import * as dropoff from './landmarks/dropoff.js';
+import * as openLand from './landmarks/open.js';
+import * as twilight from './landmarks/twilight.js';
+import * as midnight from './landmarks/midnight.js';
+import * as vents from './landmarks/vents.js';
 import * as spawnTemp from './creatures/spawn-temp.js';
 
 export const app = {
@@ -233,7 +241,7 @@ if (mq && mq.addEventListener) mq.addEventListener('change', readMotion);
 // `init()` that runs here once the canvas exists. Registering from a module's
 // top level instead would touch this file's bindings while they are still in
 // their temporal dead zone. Each stage adds one import and one entry below.
-const MODULES = [camera, water, shallows, reefLand, dropoff, spawnTemp,
+const MODULES = [camera, water, shallows, reefLand, dropoff, openLand, twilight, midnight, vents, spawnTemp,
   panel, buttons, fps, debugMenu, debugScene];
 
 try {

@@ -8,7 +8,7 @@
 | 3 | complete | 0.4.0 |
 | 4 | complete | 0.5.0 |
 | 5 | complete | 0.6.0 |
-| 6 | not started | - |
+| 6 | complete | 0.7.0 |
 | 7 | not started | - |
 | 8 | not started | - |
 | 9 | not started | - |
@@ -72,3 +72,12 @@
 - Decided: every species declares itself into `SPECIES` in `js/creatures/base.js`, glossary metadata included, so stage 10's registry can wrap one existing list rather than refactoring a second one into being.
 - Verified headlessly: no errors; 39 sprites in one 1 MB atlas page; screenshots of all three zones read at a glance — bright shallows with sand flats, seagrass, a stingray, hermit crabs and sea stars under a rippling ceiling; a reef of coral heads, kelp and a tang school; and the drop-off with gorgonian fans down the wall and the wreck tilted on the slope with lit portholes and a broken mast.
 - Needs device check: whether three size bands really read at once in each zone at phone scale, whether the wreck lands as a landmark you notice rather than scroll past, and whether the reef floor's sand-on-rock dither is too busy.
+
+## Stage 6
+- Built: `js/creatures/{zone4,zone5,zone6,zone7}.js` (all 26 zone 4-7 residents) and `js/landmarks/{open,twilight,midnight,vents}.js` — the wall receding into haze, the twilight pinnacle, the closing trench walls and boulder field, and the vent field's sediment plain, three black smokers and the whale-fall skeleton.
+- Fixed a real bug in `js/camera.js` from stage 2: parallax multiplied `cam.y` directly, which slid every far-layer object clean out of its own zone (the twilight pinnacle was two bands below the screen). Parallax is now anchored on the middle of the view, with factor 0 reserved as a screen-space passthrough for the debug scene. This is the one earlier file stage 6 touched, and only to fix the bug that made its own landmarks unusable.
+- Decided: a zone's defining landmark (the pinnacle, the smokers, the whale fall, the drop-off wall) is screen-anchored, because the sideways current would otherwise carry it out of frame and the zone would lose the thing that identifies it. Scattered decoration stays world-anchored and wraps.
+- Decided: every zone-spanning landmark now fades in and out on the depth curve rather than switching on a zone index, so the trench is not still closing in over the vent field.
+- Decided: custom renders carry what a sprite grid cannot — the anglerfish's lure on its stalk, the dragonfish's red beam, the bigfin squid's right-angled arms, the whale shark's remoras and pilot fish, and the tube worm bed's retracting plumes.
+- Verified headlessly: no errors; 66 sprites still in one 1 MB atlas page, with the 170x54 whale shark rasterised intact; zone 4 reads empty with the whale shark dwarfing the hammerheads, zone 6 is dark with only bioluminescence and the bigfin's arms, zone 7 is warm with lit smoker crowns and the ribbed whale fall on its bacterial mat.
+- Needs device check: whether zone 4's emptiness reads as deliberate rather than unfinished, whether zone 6 is legible at all at phone brightness, and whether the smoker plumes are too heavy over the top of the band.

@@ -92,10 +92,21 @@ export function onRunEnd(fn) { runEnd.push(fn); }
 
 // --- parallax ---------------------------------------------------------------
 
-export function screenY(worldY, factor = 1) { return worldY - cam.y * factor; }
+/**
+ * Parallax is anchored on the middle of the view: a far layer moves less than
+ * the camera but stays put relative to what it is behind. Multiplying `cam.y`
+ * directly instead would slide a distant landmark right out of its own zone.
+ * A factor of 0 means "already in screen space" and is used by the debug scene.
+ */
+export function screenY(worldY, factor = 1) {
+  if (factor === 1) return worldY - cam.y;
+  if (factor === 0) return worldY;
+  return (worldY - cam.y) * factor + app.ih * 0.5 * (1 - factor);
+}
 
 /** Wrapped horizontal position, returned near the visible window. */
 export function screenX(worldX, factor = 1) {
+  if (factor === 0) return worldX;
   const w = world.wrapW || 1;
   let x = (worldX - cam.x * factor) % w;
   if (x < 0) x += w;

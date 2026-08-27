@@ -64,8 +64,17 @@ export function fish(o) {
       const yo = bend * (1 - u) * (1 - u) * h * 0.07;
       span(g, x, cy - hh + yo, cy + hh + yo, 'b');
       if (o.belly !== false) put(g, x, cy + hh + yo, 'l');
-      if (o.dorsal && u > 0.24 && u < 0.66) put(g, x, cy - hh + yo - 1, 'f');
-      if (o.anal && u > 0.30 && u < 0.55) put(g, x, cy + hh + yo + 1, 'f');
+      // Fin height defaults to a single row; sails and tall dorsals raise it.
+      if (o.dorsal && u > 0.24 && u < 0.66) {
+        const n = o.dorsalH || 1;
+        const k = Math.sin((u - 0.24) / 0.42 * Math.PI);
+        for (let i = 1; i <= Math.max(1, Math.round(n * k)); i++) put(g, x, cy - hh + yo - i, 'f');
+      }
+      if (o.anal && u > 0.30 && u < 0.55) {
+        const n = o.analH || 1;
+        const k = Math.sin((u - 0.30) / 0.25 * Math.PI);
+        for (let i = 1; i <= Math.max(1, Math.round(n * k)); i++) put(g, x, cy + hh + yo + i, 'f');
+      }
     }
     // tail: tallest at the tip, pinched at the peduncle, forked when big enough
     for (let x = 0; x < tail; x++) {
