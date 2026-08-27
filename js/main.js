@@ -8,6 +8,10 @@ import { cfg, prefersReducedMotion } from './config.js';
 import { P, css } from './palette.js';
 import { defineSprite, rasteriseAll, drawSpriteC, text, textWidth } from './sprites.js';
 import { VERSION } from './version.js';
+// --- stage wiring: feature modules, imported so their sprite grids register
+// before the atlas is built. Initialised in MODULES at the foot of this file.
+import * as camera from './camera.js';
+import * as water from './water.js';
 
 export const app = {
   iw: 0, ih: 0, scale: 1, dpr: 1, rotated: false,
@@ -212,7 +216,7 @@ if (mq && mq.addEventListener) mq.addEventListener('change', readMotion);
 // `init()` that runs here once the canvas exists. Registering from a module's
 // top level instead would touch this file's bindings while they are still in
 // their temporal dead zone. Each stage adds one import and one entry below.
-const MODULES = [];
+const MODULES = [camera, water];
 
 try {
   if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(() => {});

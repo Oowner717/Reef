@@ -4,7 +4,7 @@
 |-------|--------|---------|
 | 0 | complete | 0.1.0 |
 | 1 | complete | 0.2.0 |
-| 2 | not started | - |
+| 2 | complete | 0.3.0 |
 | 3 | not started | - |
 | 4 | not started | - |
 | 5 | not started | - |
@@ -37,3 +37,11 @@
 - Verified headlessly (Chromium, 500x757 @ dpr 3): no runtime or console errors, scale 7 chosen, internal 215x325, canvas covers the viewport in both axes, one atlas page (1 MB), sprite renders with hard edges and the stamp reads `0.2.0`.
 - Deferred: `setUiFadeSource` is a stub returning a constant 15% until stage 3 wires the shared button fade to it.
 - Needs device check: 60 fps on the phone; edge-to-edge fill with no browser chrome under the notch and home indicator; that the version stamp is legible but ignorable at 15%; rotate-and-back keeps the composition.
+
+## Stage 2
+- Built: `js/world.js` (seven bands, soft 18% transition blend, the colour ramp, the vent warm cast, the daily seed and an xorshift rng), `js/camera.js` (the 320 s timeline: two 20 s lingers and two 140 s legs, eased 2 s at each end via an integrated speed-profile LUT so the middle of a leg is genuinely constant-rate, plus the sideways current, horizontal wrap and parallax helpers), `js/water.js` (the dithered strip).
+- Decided: one water strip, `iw x (6*zoneH + ih)`, pre-rendered per resize with a 4x4 Bayer dither between two ramp stops. The mix is plateaued (solid, dithered transition, solid) so each band reads as a band. Exactly one strip is held; the old reference is dropped before the new allocation.
+- Decided: the ramp is a piecewise control-point list down the whole column rather than per-zone top/bottom pairs, so every boundary is continuous by construction — there is no seam to hide.
+- Decided: zone height is clamped so the strip never exceeds 4000 px, and colour depth is normalised against `7*zoneH` so zone `i` always starts at `i/7` of the ramp even when the clamp bites.
+- Verified headlessly: no errors; `?start=4` lands at depth 0.501, zone `open`, 0.51 through the band; the progress curve reads 0 / 0 / 0.282 / 0.499 / 1 / 1 / 0.501 / 0.002 at t = 0/20/60/90/160/179/250/319; strip 215x2275 = 1.87 MB; screenshots of zones 1, 3, 5 and 7 are clearly distinct with visible dither transitions and the warm floor cast.
+- Needs device check: that `?speed=10` reads as one smooth continuous fall with no stutter at the linger-to-leg easings, and that the dither texture is not busy at real pixel density.
