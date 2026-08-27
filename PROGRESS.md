@@ -137,3 +137,23 @@
 - Verified with CDP: the title holds 2.2 s and cross-fades out over 600 ms with no cut; a tap jumps to the fade rather than cutting; `?title=0` disables it; under reduced motion the shimmer, the drifters and the serpent are dropped and the wordmark and fade remain; after 40 s of play at `?speed=6` a reload resumed at t=231.9 in zone 4 from a saved t=229.5.
 - Final sanity run: 20 s of ordinary play, 1262 frames, 100 pooled entities, quality tier 0, 2.52 MB of offscreen surfaces, 18 layers, 10 of 92 glossary entries seen, no console output.
 - Needs device check: that the fade into the scene has no seam at real frame rate, that the wordmark reads at phone size, and that returning within five minutes feels like resuming rather than restarting.
+
+## Notes carried forward to stage 13
+
+- **Module length.** Four files are over the "about 250 lines" guideline:
+  `js/behaviours.js` (314), `js/main.js` (276), `js/spawner.js` (272),
+  `js/sprites/shapes.js` (264). Each is a single cohesive thing — the twelve
+  movement types, the loop and its wiring block, the spawn cycle, the grid
+  builders — and splitting any of them would cost more in indirection than it
+  saves. Flagged rather than quietly ignored.
+- **Not yet consumed:** `tierParams()` sheds creature density (stage 7) but its
+  particle, bloom, shaft and caustic figures wait for stage 14; the "sound",
+  "keep screen awake", "scanlines" and "mythicals per run" settings rows store
+  and restore correctly but have nothing to drive until stages 13-17.
+- **Empty by design until stage 15:** the glossary's Mythicals section, and the
+  title screen's serpent tease, which draws a fixed silhouette rather than
+  whichever mythical the bag will serve next.
+- **Test harness** (scratchpad, not committed): a Chromium/CDP driver that runs
+  the app for real seconds, evaluates in-page, and screenshots at a chosen
+  moment. The virtual-time harness cannot run long enough for a vignette to
+  play, so anything time-dependent was verified through the CDP driver.
