@@ -8,6 +8,12 @@ import { dither, profile, sampleProfile, fillBelow, floorWorldY } from './common
 
 let plain = null, smokers = [], fall = null;
 
+/**
+ * Driven by the zone 7 vignettes: `billow` swells one chimney's plume and
+ * `stir` brightens the bacterial mat on the bones.
+ */
+export const ventFx = { billow: 0, billowIndex: 0, stir: 0 };
+
 export function smokerAt(i) { return smokers[i] || null; }
 export function whaleFall() { return fall; }
 export function floorScreenY(x) {
@@ -56,16 +62,17 @@ function drawSmoker(c, s) {
   c.fillStyle = css(P.ventWarm, 0.8);
   c.fillRect((x - 2) | 0, (base - s.h) | 0, 4, 1);
   // The plume: a slow dark column rolling upward, lit orange from below.
+  const swell = (ventFx.billow > 0 && smokers[ventFx.billowIndex] === s) ? ventFx.billow : 0;
   for (let i = 0; i < 34; i++) {
     const t = i / 34;
     const y = base - s.h - i * 2.2;
     if (y < -6 || y > app.ih) continue;
     const drift = Math.sin(cam.t * 0.5 + s.ph + t * 3.4) * (2 + t * 9);
-    const w = 3 + t * 9;
-    c.fillStyle = css(P.smoker, 0.34 * (1 - t) * (1 - t));
+    const w = (3 + t * 9) * (1 + swell * 1.9);
+    c.fillStyle = css(P.smoker, (0.34 + swell * 0.4) * (1 - t) * (1 - t));
     c.fillRect((x + drift - w / 2) | 0, y | 0, w | 0, 3);
-    if (t < 0.28) {
-      c.fillStyle = css(P.ventHot, 0.16 * (1 - t / 0.28));
+    if (t < 0.28 + swell * 0.2) {
+      c.fillStyle = css(P.ventHot, (0.16 + swell * 0.3) * (1 - t / 0.28));
       c.fillRect((x + drift - w / 2) | 0, y | 0, w | 0, 1);
     }
   }
@@ -77,7 +84,7 @@ function drawWhaleFall(c) {
   const base = floorScreenY(x);
   if (base < -30 || base > app.ih + 60) return;
   const L = fall.len, half = L / 2;
-  const mat = 0.30 + 0.22 * Math.sin(cam.t * 0.45 + fall.ph);
+  const mat = 0.30 + 0.22 * Math.sin(cam.t * 0.45 + fall.ph) + ventFx.stir * 0.5;
   c.fillStyle = css(P.bioLime, mat * 0.5);
   c.fillRect((x - half) | 0, (base - 26) | 0, L, 26);
   for (let i = 0; i < L; i++) {

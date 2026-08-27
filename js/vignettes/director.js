@@ -60,6 +60,17 @@ function findOnScreen(id) {
   return best;
 }
 
+/** Every live individual of a species — for scenes that use a whole group. */
+export function findAll(id, out) {
+  out.length = 0;
+  const items = spawner.pool.items;
+  for (let i = 0; i < items.length; i++) {
+    const c = items[i];
+    if (c.alive && c.def.id === id) out.push(c);
+  }
+  return out;
+}
+
 function spawnActor(sp) {
   stagePoint(pt);
   const c = spawner.pool.acquire();
@@ -106,7 +117,7 @@ function beginVisit(zone) {
   director.visitZone = zone;
   director.chosen = null;
   tries = 0;
-  if (!director.enabled || director.running) return;
+  if (!director.enabled) return;
   const list = vignettesForZone(zone);
   if (!list.length) return;
   const real = realVisitSeconds();
@@ -159,7 +170,10 @@ function finish() {
 
 function update(dt) {
   updateFx(dt);
-  if (cam.zone !== director.visitZone) beginVisit(cam.zone);
+  // Deferred rather than dropped: a scene that overruns into the next band used
+  // to cost that band its vignette outright, because the visit was marked begun
+  // and never revisited.
+  if (cam.zone !== director.visitZone && !director.running) beginVisit(cam.zone);
   visitLeft -= dt;
 
   if (director.chosen) {

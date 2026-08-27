@@ -38,6 +38,10 @@ import * as saveMod from './save.js';
 import './vignettes/zone1.js';
 import './vignettes/zone2.js';
 import './vignettes/zone3.js';
+import './vignettes/zone4.js';
+import './vignettes/zone5.js';
+import './vignettes/zone6.js';
+import './vignettes/zone7.js';
 import * as vignettes from './vignettes/director.js';
 
 export const app = {

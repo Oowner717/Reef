@@ -7,6 +7,6 @@ back, over five minutes and twenty seconds.
 Vanilla JS, Canvas 2D, Web Audio. No dependencies, no build step, no asset files —
 every sprite is a pixel grid generated in code.
 
-**Version:** 0.9.0
+**Version:** 0.10.0
 
 Full deploy, Home Screen and URL-parameter documentation lands at stage 13.

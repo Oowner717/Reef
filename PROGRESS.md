@@ -11,7 +11,7 @@
 | 6 | complete | 0.7.0 |
 | 7 | complete | 0.8.0 |
 | 8 | complete | 0.9.0 |
-| 9 | not started | - |
+| 9 | complete | 0.10.0 |
 | 10 | not started | - |
 | 11 | not started | - |
 | 12 | not started | - |
@@ -101,3 +101,11 @@
 - Hooks added to stage 5 landmarks for staging: `gust` on the shallows, `stationInView()` on the reef, `wreckScreen()` on the drop-off.
 - Verified with a real-time Chromium/CDP driver (new, in the scratchpad — the virtual-time harness cannot run long enough for a scene to play): all fifteen trigger and reach their peak frame with no console output; a 50 s run of ordinary play completed `ray-burial` then `octopus-hunt`, wrote 700 bytes of save, and shuffled all seven bags; `?vignette=lionfish-fan` jumps the camera to its zone and plays it.
 - Needs device check: whether each beat is legible in a few seconds to someone who does not know what it is, and whether the fx particle counts hold the frame budget during a payoff.
+
+## Stage 9
+- Built: the remaining eighteen vignettes in `js/vignettes/{zone4,zone5,zone6,zone7}.js`. The registry now holds 33, split 5/5/5/4/4/5/5 across the seven zones, exactly as specified.
+- Added to the director: `findAll(id)`, for the scenes that stage a whole group (the hammerhead column, the worm bed, the brittle stars). Added to the vent field: a `ventFx` channel so the smoker plume can swell and the bacterial mat can brighten.
+- Added to `js/vignettes/base.js`: `worldAt(screenX, screenY, layer)` and `softGlow()`. The first is a genuine correctness fix — placing a far-layer actor with plain world coordinates puts it somewhere else entirely, which is why the hammerhead column never formed. The second replaces the flat rectangles the backlit dumbo and the crossing shadow were drawing.
+- Fixed in the director: a vignette that overran into the next band cost that band its vignette outright, because the visit was marked begun while one was still running and never revisited. The visit is now deferred until the previous scene finishes.
+- Verified with the CDP driver: all eighteen trigger and reach their peak with no console output; two 95 s runs from zone 4 played four different vignettes each and shared none — `hammerhead-column / plankton-burst / backlit-dumbo` on the first and `whaleshark-pass / siphonophore-unfurl / the-lure / hagfish-knot` on the second, so consecutive runs genuinely differ.
+- Needs device check: whether the darkest beats — the lure snapping out, the beam sweep, the smoker billow — read at phone brightness, and whether the frame budget holds through the heaviest payoff.

@@ -25,6 +25,36 @@ export function defineVignette(o) {
 export function vignettesForZone(z) { return VIGNETTES.filter((v) => v.zone === z); }
 export function vignetteById(id) { return VIGNETTES.find((v) => v.id === id) || null; }
 
+// --- staging helpers --------------------------------------------------------
+
+import { cam } from '../camera.js';
+import { app } from '../main.js';
+import { css } from '../palette.js';
+
+/**
+ * World coordinates that will land at a given screen point on a parallax layer.
+ * Placing a far-layer actor with plain world coordinates puts it somewhere else
+ * entirely, because a far layer moves at a fraction of the camera.
+ */
+export function worldAt(sx, sy, layer = 1) {
+  if (layer === 1 || !layer) return { x: cam.x + sx, y: cam.y + sy };
+  return { x: cam.x * layer + sx, y: cam.y + (sy - app.ih * 0.5 * (1 - layer)) / layer };
+}
+
+/** A soft glow: three nested ellipses of falling alpha, drawn in whole rows. */
+export function softGlow(c, cx, cy, rx, ry, colour, alpha) {
+  for (let pass = 0; pass < 3; pass++) {
+    const k = 1 - pass * 0.3;
+    const h = ry * k;
+    c.fillStyle = css(colour, alpha * 0.3);
+    for (let i = -h; i <= h; i++) {
+      const hw = rx * k * Math.sqrt(Math.max(0, 1 - (i / h) * (i / h)));
+      if (hw < 0.5) continue;
+      c.fillRect((cx - hw) | 0, (cy + i) | 0, Math.max(1, (hw * 2) | 0), 1);
+    }
+  }
+}
+
 // --- timing helpers ---------------------------------------------------------
 
 export function clamp01(t) { return t < 0 ? 0 : t > 1 ? 1 : t; }
