@@ -12,7 +12,7 @@
 | 7 | complete | 0.8.0 |
 | 8 | complete | 0.9.0 |
 | 9 | complete | 0.10.0 |
-| 10 | not started | - |
+| 10 | complete | 0.11.0 |
 | 11 | not started | - |
 | 12 | not started | - |
 | 13 | not started | - |
@@ -109,3 +109,13 @@
 - Fixed in the director: a vignette that overran into the next band cost that band its vignette outright, because the visit was marked begun while one was still running and never revisited. The visit is now deferred until the previous scene finishes.
 - Verified with the CDP driver: all eighteen trigger and reach their peak with no console output; two 95 s runs from zone 4 played four different vignettes each and shared none — `hammerhead-column / plankton-burst / backlit-dumbo` on the first and `whaleshark-pass / siphonophore-unfurl / the-lure / hagfish-knot` on the second, so consecutive runs genuinely differ.
 - Needs device check: whether the darkest beats — the lure snapping out, the beam sweep, the smoker billow — read at phone brightness, and whether the frame budget holds through the heaviest payoff.
+
+## Stage 10
+- Built: `js/registry.js`, `js/glossary/seen.js` and `js/glossary/panel.js`, plus the pixel shell added to the existing button cluster and the panel built inside the existing overlay shell — no new button or panel modules.
+- Refactored (the one stage allowed to): the spawner and the vignette director now read `spawnable()` and `scenesForZone()` from the registry rather than importing `SPECIES` and `VIGNETTES` directly. Because every species and vignette already declared its own glossary metadata where it was defined, the registry only had to group and order what exists — there was no second list to merge.
+- Decided: landmarks (the wreck, the whale fall, the smokers, the gorgonian fans) are not glossary entries. They are environment rather than creatures or scenes, and the open question in the game plan is left answered that way; the registry would pick them up immediately if that changed.
+- Decided: locked rows draw the real sprite through a `source-in` fill on a scratch canvas, so the silhouette is the actual shape rather than a placeholder box. Thumbnails animate at 1x, 1/2, 1/3 or 1/4 — whole fractions only, so the pixels stay hard.
+- Decided: the header is drawn after the rows on its own ground, so scrolled entries pass behind the counter instead of through it.
+- Verified with CDP: 92 entries across nine sections (49 creatures by zone, 10 travellers, 33 scenes); `?seen=all` unlocks everything; unlocked rows animate with name, zone dots and size band; locked rows are dark silhouettes with dashed names; tapping expands to where it lives, how it moves and the note, wrapped inside the panel; scrolling works; seen state writes to localStorage.
+- Deferred: the Mythicals section is empty until stage 15 registers the seven. The stats line reads zeros until stage 11 starts tracking them.
+- Needs device check: that the shell is unnoticeable until looked for, that the notification dot reads, that scrolling inside the panel never moves the page behind it, and that seen state survives closing the app on the phone.

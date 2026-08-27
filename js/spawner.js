@@ -5,7 +5,8 @@ import { addLayer, addUpdater, layer, app } from './main.js';
 import { cam, screenY } from './camera.js';
 import { world } from './world.js';
 import { cfg } from './config.js';
-import { SPECIES, makePool } from './creatures/base.js';
+import { makePool } from './creatures/base.js';
+import { spawnable } from './registry.js';
 import { tierParams } from './perf.js';
 import { addInfo, addToggle } from './debug/registry.js';
 import { addProvider } from './debug/diagnostics.js';
@@ -145,15 +146,19 @@ function spawnOne(s, anywhere) {
 }
 
 let rotate = 0;
+let cached = null;
+/** The registry is stable once the modules have loaded; read it once. */
+function table() { return cached || (cached = spawnable()); }
 
 function spawnPass(anywhere) {
   const d = density();
   if (cam.runs !== whaleRun) { whaleRun = cam.runs; whaleAllowed = Math.random() < 0.25; }
   // Start the sweep at a different species each tick, so a band hitting its cap
   // does not permanently starve whatever happens to be last in the table.
-  rotate = (rotate + 7) % SPECIES.length;
-  for (let k = 0; k < SPECIES.length; k++) {
-    const s = SPECIES[(k + rotate) % SPECIES.length];
+  const list = table();
+  rotate = (rotate + 7) % list.length;
+  for (let k = 0; k < list.length; k++) {
+    const s = list[(k + rotate) % list.length];
     if (!s.ambient) continue;
     if (s.runChance !== undefined && !whaleAllowed) continue;
     const r = rangeFor(s);
@@ -256,12 +261,12 @@ export function init() {
   addInfo('entities', 'by band', () =>
     ['motes', 'small', 'medium', 'large', 'huge'].map((b) =>
       (b[0].toUpperCase()) + (bandCounts[b] || 0) + '/' + BAND_CAP[b]).join(' '));
-  addInfo('entities', 'species', () => String(SPECIES.length));
+  addInfo('entities', 'species', () => String(table().length));
   addInfo('entities', 'density', () => density().toFixed(2));
   addToggle('overlays', 'spawn bounds', () => spawner.showBounds,
     (v) => { spawner.showBounds = v; }, { sectionOrder: 35 });
   addProvider('entities', 25, () => 'pool ' + pool.live() + '/' + POOL_CAP +
     '  bands ' + ['motes', 'small', 'medium', 'large', 'huge'].map((b) =>
       b + ' ' + (bandCounts[b] || 0) + '/' + BAND_CAP[b]).join(', ') +
-    '\\ndensity ' + density().toFixed(2) + '  species ' + SPECIES.length);
+    '\\ndensity ' + density().toFixed(2) + '  species ' + table().length);
 }

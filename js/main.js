@@ -43,6 +43,8 @@ import './vignettes/zone5.js';
 import './vignettes/zone6.js';
 import './vignettes/zone7.js';
 import * as vignettes from './vignettes/director.js';
+import * as seen from './glossary/seen.js';
+import * as glossary from './glossary/panel.js';
 
 export const app = {
   iw: 0, ih: 0, scale: 1, dpr: 1, rotated: false,
@@ -251,8 +253,8 @@ if (mq && mq.addEventListener) mq.addEventListener('change', readMotion);
 // `init()` that runs here once the canvas exists. Registering from a module's
 // top level instead would touch this file's bindings while they are still in
 // their temporal dead zone. Each stage adds one import and one entry below.
-const MODULES = [saveMod, camera, water, shallows, reefLand, dropoff, openLand, twilight, midnight, vents, spawner, vignettes,
-  panel, buttons, fps, debugMenu, debugScene];
+const MODULES = [saveMod, camera, water, shallows, reefLand, dropoff, openLand, twilight, midnight, vents, spawner, vignettes, seen,
+  panel, buttons, glossary, fps, debugMenu, debugScene];
 
 try {
   if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(() => {});

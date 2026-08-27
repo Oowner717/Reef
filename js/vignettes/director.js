@@ -10,7 +10,8 @@ import { createBag } from '../bag.js';
 import { addTierHold } from '../perf.js';
 import { addInfo, addChoice, addToggle } from '../debug/registry.js';
 import { addProvider } from '../debug/diagnostics.js';
-import { VIGNETTES, vignettesForZone, vignetteById } from './base.js';
+import { VIGNETTES, vignetteById } from './base.js';
+import { scenesForZone } from '../registry.js';
 import { updateFx, drawFx, clearFx, fxLive } from './fx.js';
 
 export const director = {
@@ -118,7 +119,7 @@ function beginVisit(zone) {
   director.chosen = null;
   tries = 0;
   if (!director.enabled) return;
-  const list = vignettesForZone(zone);
+  const list = scenesForZone(zone);
   if (!list.length) return;
   const real = realVisitSeconds();
   visitLeft = real;
@@ -213,7 +214,7 @@ export function trigger(id) {
 
 export function init() {
   for (let z = 0; z < 7; z++) {
-    const list = vignettesForZone(z).map((v) => v.id);
+    const list = scenesForZone(z).map((v) => v.id);
     bags[z] = createBag('vig' + z, list.length ? list : ['none']).sync();
   }
   addUpdater(update, 20);
