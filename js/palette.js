@@ -66,6 +66,40 @@ export function mix(a, b, t) {
   ];
 }
 
+// --- derived shades ---------------------------------------------------------
+// Two fixed derivations per body colour, so every creature can be countershaded
+// without hand-picking a third and fourth token for each of them. Still one
+// source of truth, and still a limited palette: exactly two extra steps, always
+// the same two, computed here and nowhere else.
+
+const SHADE_TO_W6 = 0.44;      // shadows go blue-black, not just dark
+const TINT_TO_WHITE = 0.30;
+const derived = new Map();
+
+function hex3(rgbArr) {
+  return '#' + rgbArr.map((v) => Math.max(0, Math.min(255, v | 0)).toString(16).padStart(2, '0')).join('');
+}
+
+/** The shaded step of a token: one stop toward the deep water. */
+export function shade(colour) {
+  const key = 's' + colour;
+  let v = derived.get(key);
+  if (v) return v;
+  v = hex3(mix(colour, P.w6, SHADE_TO_W6));
+  derived.set(key, v);
+  return v;
+}
+
+/** The lit step of a token: one stop toward white. */
+export function tint(colour) {
+  const key = 't' + colour;
+  let v = derived.get(key);
+  if (v) return v;
+  v = hex3(mix(colour, P.white, TINT_TO_WHITE));
+  derived.set(key, v);
+  return v;
+}
+
 /** Sample the water ramp at t in 0..1 across the whole column. */
 export function waterAt(t) {
   const k = t < 0 ? 0 : t > 1 ? 1 : t;

@@ -5,7 +5,7 @@ import { addLayer, onResize, app } from '../main.js';
 import { cam, screenX, screenY } from '../camera.js';
 import { world, dailySeed, rng } from '../world.js';
 import { P, css } from '../palette.js';
-import { dither, profile, sampleProfile, fillSide, blade, floorWorldY } from './common.js';
+import { dither, strata, profile, sampleProfile, fillSide, blade, floorWorldY } from './common.js';
 
 let side = 1;                 // +1 wall on the right, -1 on the left
 let face = null, fans = [], wreck = null, shelfTop = 0;
@@ -115,7 +115,8 @@ function draw(c) {
   const prev = c.globalAlpha;
   if (alpha < 1) c.globalAlpha = prev * alpha;
   fillSide(c, topRow | 0, app.ih, side, edgeAt, app.iw,
-    dither(c, 'rock1', 'rock2', 0.4), P.rock2);
+    dither(c, 'rock1', 'rock2', 0.4), P.greyMid,
+    strata(c, 'wall', [[2, 'rock2', 'greyMid', 0.4], [5, 'rock2', 'rock1', 0.5]]));
   drawFans(c);
   drawWreck(c);
   c.globalAlpha = prev;

@@ -85,6 +85,54 @@ function blit(def, frame, flip) {
   return slot;
 }
 
+/**
+ * Where a sprite's bright pixels are and what colour they average to. Computed
+ * once at build time so the bloom pass can light every glowing creature without
+ * any species declaring anything: if a sprite has bright pixels, it glows.
+ */
+function analyse(def) {
+  const frame = def.frames[0];
+  const px = [];
+  let sr = 0, sg = 0, sb = 0;
+  for (let y = 0; y < def.h; y++) {
+    for (let x = 0; x < def.w; x++) {
+      const m = def.map[frame[y][x]];
+      if (m === undefined || m === null) continue;
+      const token = Array.isArray(m) ? m[0] : m;
+      const [r, g, b] = rgb(token);
+      // Bright, and either near-white or strongly coloured. A mid grey belly is
+      // not a lamp.
+      const luma = r * 0.299 + g * 0.587 + b * 0.114;
+      const sat = Math.max(r, g, b) - Math.min(r, g, b);
+      if (luma < 205 && !(luma > 140 && sat > 90)) continue;
+      px.push(x, y);
+      sr += r; sg += g; sb += b;
+    }
+  }
+  const n = px.length >> 1;
+  if (n < 3) return null;
+  let cx = 0, cy = 0;
+  for (let i = 0; i < px.length; i += 2) { cx += px[i]; cy += px[i + 1]; }
+  cx /= n; cy /= n;
+  let spread = 0;
+  for (let i = 0; i < px.length; i += 2) spread += Math.hypot(px[i] - cx, px[i + 1] - cy);
+  spread /= n;
+  // Scattered highlights — a whale shark's spot grid, a rim light — are not a
+  // glow. Only pixels clustered into a lamp are.
+  if (spread > 3.4 + Math.sqrt(n) * 0.9) return null;
+  const area = def.w * def.h;
+  const colour = nearestGlow(sr / n, sg / n, sb / n);
+  return {
+    n,
+    cx: cx + 0.5, cy: cy + 0.5,
+    // The halo belongs to the animal: never wider than the animal itself, or a
+    // jellyfish stops being a jellyfish and becomes a ball of light.
+    r: Math.min(spread * 1.6 + 2.5, Math.max(def.w, def.h) * 0.55),
+    weight: Math.min(0.8, 0.16 + n / Math.max(20, area * 0.9)) * GLOW_WEIGHT[colour],
+    colour,
+  };
+}
+
 /** Rasterise every registered sprite. Called once, from the loading step. */
 export function rasteriseAll() {
   for (const [key, def] of defs) {
@@ -93,10 +141,34 @@ export function rasteriseAll() {
       f.push(blit(def, frame, false));
       fx.push(blit(def, frame, true));
     }
-    entries.set(key, { w: def.w, h: def.h, n: def.frames.length, f, fx });
+    entries.set(key, { w: def.w, h: def.h, n: def.frames.length, f, fx, bright: analyse(def) });
   }
   built = true;
 }
+
+// Glow colours are quantised to a handful of palette tokens so the bloom pass
+// can pre-render one soft blob per colour instead of tinting per draw.
+export const GLOW_TOKENS = ['white', 'bioCyan', 'bioMagenta', 'bioLime',
+  'bioViolet', 'bioGold', 'ventWarm', 'accYellow', 'accOrange'];
+
+// A white belly is lit; a bioluminescent organ is a lamp. Same pass, different
+// conviction, so pale animals keep their silhouette and the bio colours sing.
+const GLOW_WEIGHT = [0.5, 1, 1, 1, 1, 0.8, 0.95, 0.7, 0.7];
+
+function nearestGlow(r, g, b) {
+  let best = 0, bestD = Infinity;
+  for (let i = 0; i < GLOW_TOKENS.length; i++) {
+    const [tr, tg, tb] = rgb(P[GLOW_TOKENS[i]]);
+    const d = (tr - r) * (tr - r) + (tg - g) * (tg - g) + (tb - b) * (tb - b);
+    if (d < bestD) { bestD = d; best = i; }
+  }
+  return best;
+}
+
+// Stage 14's bloom registers here. Every sprite draw offers its bright pixels;
+// the sink decides whether the depth makes them worth lighting.
+let glowSink = null;
+export function setGlowSink(fn) { glowSink = fn; }
 
 export function drawSprite(ctx, key, frame, x, y, flip) {
   const e = entries.get(key);
@@ -104,6 +176,10 @@ export function drawSprite(ctx, key, frame, x, y, flip) {
   const n = e.n;
   const s = (flip ? e.fx : e.f)[((frame % n) + n) % n];
   ctx.drawImage(pages[s.p].canvas, s.x, s.y, e.w, e.h, x | 0, y | 0, e.w, e.h);
+  if (glowSink && e.bright) {
+    const b = e.bright;
+    glowSink(x + (flip ? e.w - b.cx : b.cx), y + b.cy, b.r, b.colour, b.weight);
+  }
 }
 
 /** Centred draw — the common case, since positions are creature centres. */

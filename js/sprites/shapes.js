@@ -5,6 +5,11 @@
 // Every builder emits the same alphabet, and each species supplies the map:
 //   .  empty      k  outline    b  body      l  belly / light
 //   d  dark mark  e  eye        f  fin       g  glow
+//   h  lit rim    s  shaded flank
+//
+// `h` and `s` are derived from the body colour by the palette, so every shape
+// below gets form shading — a lit dorsal edge and a flank curving into shadow —
+// without any species naming two more tokens.
 
 export function grid(w, h) {
   const g = new Array(h);
@@ -62,8 +67,13 @@ export function fish(o) {
       const hh = maxHH * (o.snout === 'point' ? taper * (1 - u * 0.25) : taper);
       // The head barely moves and the peduncle swings — a fish, not a see-saw.
       const yo = bend * (1 - u) * (1 - u) * h * 0.07;
-      span(g, x, cy - hh + yo, cy + hh + yo, 'b');
-      if (o.belly !== false) put(g, x, cy + hh + yo, 'l');
+      const topY = cy - hh + yo, botY = cy + hh + yo;
+      span(g, x, topY, botY, 'b');
+      // Light comes from above: a lit dorsal edge, then the flank turning under.
+      if (hh >= 1.1) put(g, x, topY, 'h');
+      if (o.belly !== false) put(g, x, botY, 'l');
+      if (hh >= 2.2) put(g, x, botY - 1, 's');
+      if (hh >= 4.6) put(g, x, botY - 2, 's');
       // Fin height defaults to a single row; sails and tall dorsals raise it.
       if (o.dorsal && u > 0.24 && u < 0.66) {
         const n = o.dorsalH || 1;
@@ -131,8 +141,11 @@ export function ray(o) {
       const d = Math.abs(u - 0.42) / 0.58;
       const hh = Math.max(0, maxHH * (1 - d * d * 0.93));
       const lift = bend * d * d * h * 0.22;
-      span(g, x, cy - hh - lift, cy + hh - lift, 'b');
-      if (o.belly !== false) put(g, x, cy + hh - lift, 'l');
+      const topY = cy - hh - lift, botY = cy + hh - lift;
+      span(g, x, topY, botY, 'b');
+      if (hh >= 1.1) put(g, x, topY, 'h');
+      if (o.belly !== false) put(g, x, botY, 'l');
+      if (hh >= 2.4) put(g, x, botY - 1, 's');
     }
     if (o.tail) {
       // A thin whip trailing behind the wings, curving with the flap.
@@ -173,7 +186,11 @@ export function bell(o) {
     for (let y = 0; y <= rh; y++) {
       const k = y / Math.max(1, rh);
       const hw = rw * Math.sqrt(Math.max(0, 1 - k * k * 0.86));
-      for (let x = Math.round(cx - hw); x <= Math.round(cx + hw); x++) put(g, x, 1 + (rh - y), 'b');
+      const row = 1 + (rh - y);
+      for (let x = Math.round(cx - hw); x <= Math.round(cx + hw); x++) put(g, x, row, 'b');
+      // The dome catches the light on its crown and darkens where it turns.
+      if (k > 0.72) for (let x = Math.round(cx - hw); x <= Math.round(cx + hw); x++) put(g, x, row, 'h');
+      else if (k < 0.30 && rh > 3) for (let x = Math.round(cx - hw); x <= Math.round(cx + hw); x++) put(g, x, row, 's');
     }
     for (let x = Math.round(cx - rw); x <= Math.round(cx + rw); x++) put(g, x, 1 + rh, 'l');
     for (let a = 0; a < arms; a++) {
@@ -203,7 +220,11 @@ export function blob(o) {
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
         const dx = (x - cx) / (rx * (1 + wob)), dy = (y - cy) / (ry * (1 - wob));
-        if (dx * dx + dy * dy <= 1) g[y][x] = 'b';
+        const d2 = dx * dx + dy * dy;
+        if (d2 > 1) continue;
+        // A top-lit sphere: rim light up and left, shadow down and right.
+        const lit = -dy * 0.85 - dx * 0.35;
+        g[y][x] = lit > 0.62 ? 'h' : lit < -0.5 ? 's' : 'b';
       }
     }
     if (o.spikes) {

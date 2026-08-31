@@ -16,6 +16,7 @@
 | 11 | complete | 0.12.0 |
 | 12 | complete | 0.13.0 |
 | 13 | complete | 0.14.0 |
+| 14 | complete | 0.15.0 |
 
 > **Run note.** The operator asked for stages 0–12 in a single pass and asked
 > not to be prompted between stages, so the mandatory device-check pauses after
@@ -198,19 +199,125 @@ oscillating, which is the behaviour the hysteresis is for.
 
 **Not verified — these need the phone:** 60 fps with the full roster; that the governor sheds and restores under real load; edge-to-edge fill under the notch and home indicator; Add to Home Screen launching fullscreen as Reef; that the phone genuinely does not sleep on iOS 18.4+; that Copy diagnostics reaches the iOS clipboard; that panel scrolling never rubber-bands the page; whether each vignette beat reads in a few seconds; and **the hour-long soak test**, which is stage 13's last line and is yours to run.
 
-## Notes carried forward to stage 14
+## Stage 14 — Effects, and a visual pass over the whole app
 
-- **Module length.** Four files are over the "about 250 lines" guideline:
-  `js/behaviours.js` (314), `js/main.js` (276), `js/spawner.js` (272),
-  `js/sprites/shapes.js` (264). Each is a single cohesive thing — the twelve
-  movement types, the loop and its wiring block, the spawn cycle, the grid
-  builders — and splitting any of them would cost more in indirection than it
-  saves. Flagged rather than quietly ignored.
-- **Not yet consumed:** `tierParams()` sheds creature density (stage 7) but its
-  particle, bloom, shaft and caustic figures wait for stage 14; the "sound",
-  "scanlines" and "mythicals per run" settings rows store and restore correctly
-  but have nothing to drive until stages 14-17. "Keep screen awake" is live as
-  of stage 13.
+Asked for: "greatly improve and modernize the visuals of the entire game."
+That is stage 14's light and particle work plus an art-direction pass over what
+was already there, so it is logged as one stage.
+
+- Built: `js/effects.js` (a half-resolution additive glow buffer, light shafts,
+  caustics, vignette, scanlines, and `ring()` for the mythicals) and
+  `js/particles.js` (one 380-slot typed-array pool, six kinds, seeded from the
+  same `zoneValue` curves as everything else). Added `shade()`/`tint()` to the
+  palette, form shading to all four generated shapes, automatic bright-pixel
+  analysis to the atlas, depth haze to `Creature.draw`, strata to `fillBelow`
+  and `fillSide`, and a swell-and-noise term to the water column's dither.
+- Decided: **nothing declares that it glows.** `analyse()` finds each sprite's
+  bright pixels once at atlas build; if they are clustered into a lamp the
+  sprite gets a halo, and if they are scattered (a whale shark's spot grid, a
+  rim light) it does not. 60 species, zero per-species bloom metadata.
+- Decided: two derived palette steps rather than two more tokens per species.
+  `map()` fills `s` and `h` from the body colour, so the whole roster is
+  countershaded and the palette is still one file and still limited.
+- Decided: depth haze is alpha, not a tinted second atlas. What shows through a
+  far creature is the water column, which is exactly the colour the haze would
+  be — so the correct result costs nothing and needs no extra memory.
+- Decided: the effects stay inside the existing quality tiers rather than
+  getting a settings row of their own. Measured on the headless software
+  renderer, all four together cost about 0.8 ms of a 2.3 ms frame; tier 1 halves
+  the bloom resolution, tier 2 drops bloom, tier 3 drops caustics too.
+
+### Three things that were wrong on the first render
+
+1. **Square halos.** The first glow pass drew nested rectangles. Replaced with
+   nine pre-rendered radial blobs, one per glow colour, quantised so a glow is a
+   single `drawImage`.
+2. **Caustic wallpaper.** The surface dapple tiled the top third of the screen
+   at a flat alpha and ended on a hard horizontal line. It now fades out with
+   distance and runs out instead of stopping.
+3. **Every white belly blooming.** A whale shark's spots and a jellyfish bell
+   were both being read as lamps. Now gated on saturation and luma, rejected on
+   spread, capped at the sprite's own size, and halved again for the pale
+   tokens — a white belly is lit, a bioluminescent organ is a lamp.
+
+### Two more found by looking at the result
+
+4. **The reef lost its light the moment the ceiling did.** The shafts hung from
+   the surface, so once zone 1's ceiling was off the top of the screen the whole
+   beam was drawn above the view — and zone 2 asks for 0.80 shafts. The anchor
+   is now clamped to half a screen above the view.
+5. **Two layers called `vignette`.** `addLayer` keys nothing, so both drew, but
+   `layer('vignette')` and the debug menu's toggle only ever found the first.
+   The edge darkening is `edge-shade` now; the set-piece scenes keep the name.
+
+### The water column's straight edges
+
+A 4×4 Bayer grid dithering between two ramp stops draws a dead-straight
+horizontal line wherever the ramp crosses a stop, and three of them were visible
+on one screen. The threshold now picks up a two-frequency swell and a little
+signed noise, so the crossing bends and dissolves. Both are computed without a
+single `Math.sin` in the pixel loop — the swell is split into per-column and
+per-row terms through the sine addition identity, the noise is an integer hash —
+because the strip is 228 × 4000 pixels and it is rebuilt on every rotate.
+
+### What the effects cost, and what the governor did about it
+
+Measured on the headless software renderer with the quality tier pinned, one
+effect removed at a time, five-second windows:
+
+```
+zone 1              work ms
+everything on          2.30
+  - caustics           2.12
+  - shafts             1.95
+  - bloom              1.57
+  - particles          1.46
+```
+
+So the whole light pass is about 0.85 ms of a 2.3 ms frame, against the 3 ms
+DESIGN.md allots it. Two silent 220-second runs, one browser at a time, no
+polling — because polling the page over CDP is itself a stutter:
+
+```
+                 frames   work   tier changes   worst frame
+effects on       13301   1.70 ms      9           100.1 ms
+effects off      13301   1.43 ms      3            66.5 ms
+```
+
+Identical frame counts: both held 60.5 fps for the full run. **Both ended at
+tier 3**, and stage 13's nine-minute soak of the same code without the effects
+stayed at tier 0 — so what is driving the governor down is 66-100 ms scheduling
+stalls in this container, not the renderer. The effects add 0.27 ms of work and,
+in an environment that stalls, made the excursions more frequent. Not spun as a
+pass: on a phone this needs re-measuring, and if the governor pins itself at
+tier 3 there, the visuals this stage added are the first thing shed.
+
+- Carried forward, not fixed here: the 1% low is the mean of the worst two
+  frames in a three-second window, so one 100 ms stall reads as 17 fps for a
+  full three seconds and resets the twenty-second recovery timer. Anything that
+  stalls once every twenty seconds pins the tier at its floor. That is stage
+  13's design and predates this stage; changing a quality governor is not a
+  visual change, so it is flagged rather than quietly altered.
+
+- Needs device check: that the bloom reads as light rather than as haze on an
+  OLED at phone brightness; that the shafts are not distracting over five
+  minutes; that the added fill cost does not move the battery figure; whether
+  the caustics are still visible at all in sunlight; and whether the governor
+  holds tier 0 on a real phone with the effects on.
+
+## Notes carried forward
+
+- **Module length.** Six files are over the "about 250 lines" guideline:
+  `js/behaviours.js` (314), `js/effects.js` (314), `js/spawner.js` (291),
+  `js/sprites.js` (289), `js/main.js` (286), `js/sprites/shapes.js` (285).
+  Each is a single cohesive thing — the twelve movement types, the light pass,
+  the spawn cycle, the atlas, the loop and its wiring block, the grid builders
+  — and splitting any of them would cost more in indirection than it saves.
+  Flagged rather than quietly ignored.
+- **Not yet consumed:** the "sound" and "mythicals per run" settings rows store
+  and restore correctly but have nothing to drive until stages 15-17. As of
+  stage 14 every figure in `tierParams()` is consumed, and "scanlines" and
+  "motion" are both live.
 - **Empty by design until stage 15:** the glossary's Mythicals section, and the
   title screen's serpent tease, which draws a fixed silhouette rather than
   whichever mythical the bag will serve next.

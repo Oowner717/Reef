@@ -58,13 +58,6 @@ function withEscort(c, ctx) {
   }
 }
 
-function hazed(c, ctx) {
-  const prev = ctx.globalAlpha;
-  ctx.globalAlpha = prev * 0.5;
-  drawSpriteC(ctx, c.spriteKey(), c.frameIndex(), c.sx() | 0, c.sy() | 0, c.face < 0);
-  ctx.globalAlpha = prev;
-}
-
 export const WHALESHARK = defineSpecies({
   id: 'whaleshark', name: 'Whale Shark', zones: [3], band: 'huge', sprite: 'whaleshark',
   size: 170, fps: 3, behaviour: B.cruising, behaviourId: 'cruising', render: withEscort,
@@ -99,7 +92,7 @@ export const SAILFISH = defineSpecies({
 
 export const HAMMERHEAD = defineSpecies({
   id: 'hammerhead', name: 'Hammerhead', zones: [3], band: 'large', sprite: 'hammerhead',
-  size: 66, fps: 3, behaviour: B.cruising, behaviourId: 'cruising', layer: 0.5, render: hazed,
+  size: 66, fps: 3, behaviour: B.cruising, behaviourId: 'cruising', layer: 0.5,
   note: 'The wide head spreads its electrical sensors, and they school by the hundred.',
   depth: [0.15, 0.75], maxAlive: 5, count: [3, 5],
   tune: { speed: 9, turnRate: 0.14, turnAmp: 0.25, agility: 0.5, vertical: 0.08, surge: 0.05 },

@@ -5,6 +5,8 @@
 import { addUpdater, app, pause, resume } from './main.js';
 import { flush } from './save.js';
 import { releaseStrip, rebuildStrip, stripBytes, stripSize } from './water.js';
+import { releaseEffects, rebuildEffects, effectsBytes } from './effects.js';
+import { clearParticles } from './particles.js';
 import { atlasBytes, atlasPageCount } from './sprites.js';
 import { spawner } from './spawner.js';
 import { fxLive, fxCap } from './vignettes/fx.js';
@@ -21,7 +23,7 @@ export const memory = {
   history: [],                 // capped: this array must not grow either
 };
 
-export function offscreenBytes() { return atlasBytes() + stripBytes(); }
+export function offscreenBytes() { return atlasBytes() + stripBytes() + effectsBytes(); }
 
 let checkIn = CHECK_EVERY;
 
@@ -74,14 +76,19 @@ function releaseAll() {
   pause();
   flush();
   // The atlas stays: it is the expensive one to rebuild and the small one to
-  // hold. The water strip is the large regenerable buffer.
+  // hold. The water strip and the effect surfaces are the large regenerable
+  // buffers, and the particle pool is worth emptying so nothing streaks back
+  // in from wherever the camera was an hour ago.
   releaseStrip();
+  releaseEffects();
+  clearParticles();
 }
 
 function rebuildAll() {
   if (!memory.released) return;
   memory.released = false;
   rebuildStrip();
+  rebuildEffects();
   resume();
 }
 

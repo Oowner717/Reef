@@ -4,7 +4,7 @@ import { addLayer, onResize, app } from '../main.js';
 import { cam, screenX, screenY } from '../camera.js';
 import { world, dailySeed, rng } from '../world.js';
 import { P } from '../palette.js';
-import { dither, profile, sampleProfile, fillSide, fillBelow, floorWorldY } from './common.js';
+import { dither, strata, profile, sampleProfile, fillSide, fillBelow, floorWorldY } from './common.js';
 
 let left = null, right = null, floor = null, boulders = [];
 
@@ -37,23 +37,28 @@ function draw(c) {
   c.globalAlpha = prev * fade;
   const k = squeeze();
   const fill = dither(c, 'silhouette', 'rock1', 0.4);
+  const face = strata(c, 'trench-face', [[2, 'rock1', 'rock2', 0.5], [4, 'silhouette', 'rock1', 0.55]]);
   fillSide(c, 0, app.ih, -1, (sy) =>
-    k * app.iw + sampleProfile(left, (sy + cam.y) * 2.7, world.wrapW), app.iw, fill, P.rock1);
+    k * app.iw + sampleProfile(left, (sy + cam.y) * 2.7, world.wrapW), app.iw, fill, P.rock1, face);
   fillSide(c, 0, app.ih, 1, (sy) =>
-    app.iw - k * app.iw - sampleProfile(right, (sy + cam.y) * 2.7, world.wrapW), app.iw, fill, P.rock1);
+    app.iw - k * app.iw - sampleProfile(right, (sy + cam.y) * 2.7, world.wrapW), app.iw, fill, P.rock1, face);
 
   const top = screenY(floorWorldY(5), 1);
   if (top < app.ih + 40) {
     fillBelow(c, 0, app.iw, app.ih, (x) => top + sampleProfile(floor, x + cam.x, world.wrapW),
-      fill, P.rock1, world.zoneH * 0.2);
+      fill, P.rock1, world.zoneH * 0.2,
+      strata(c, 'trench', [[2, 'rock1', 'rock2', 0.55], [5, 'silhouette', 'rock1', 0.6]]));
     for (const b of boulders) {
       const x = screenX(b.x, 1);
       if (x < -b.w || x > app.iw + b.w) continue;
       const base = top + sampleProfile(floor, x + cam.x, world.wrapW);
-      c.fillStyle = fill;
       for (let i = 0; i < b.h; i++) {
         const hw = b.w * 0.5 * Math.sqrt(Math.max(0, 1 - (i / b.h) * (i / b.h)));
-        c.fillRect((x - hw) | 0, (base - i) | 0, Math.max(1, (hw * 2) | 0), 1);
+        const x0 = (x - hw) | 0, w = Math.max(1, (hw * 2) | 0);
+        c.fillStyle = fill;
+        c.fillRect(x0, (base - i) | 0, w, 1);
+        // A boulder is only a boulder once its crown is lighter than its foot.
+        if (i > b.h - 3) { c.fillStyle = P.rock1; c.fillRect(x0, (base - i) | 0, w, 1); }
       }
     }
   }

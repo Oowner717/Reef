@@ -38,6 +38,21 @@ export function dither(c, a, b, level) {
   return p;
 }
 
+const strataCache = new Map();
+
+/**
+ * Cached strata for `fillBelow`. spec is [[height, tokenA, tokenB, level], ...]
+ * from the surface down; built once, because the patterns underneath are
+ * themselves cached against one context.
+ */
+export function strata(c, key, spec) {
+  let v = strataCache.get(key);
+  if (v) return v;
+  v = spec.map((b) => ({ h: b[0], fill: dither(c, b[1], b[2], b[3]) }));
+  strataCache.set(key, v);
+  return v;
+}
+
 /**
  * A seeded height profile: `n` samples of a summed-sine ridge line, so the
  * same date always gives the same seabed.
@@ -72,7 +87,7 @@ export function sampleProfile(a, worldX, wrapW) {
  * Fill everything below a top edge, as merged runs of equal integer height.
  * topAt(x) returns the screen y of the surface at screen column x.
  */
-export function fillBelow(c, x0, x1, bottom, topAt, fill, rim, thickness) {
+export function fillBelow(c, x0, x1, bottom, topAt, fill, rim, thickness, bands) {
   if (bottom <= 0) return;
   const th = thickness || Infinity;
   let runStart = x0, runTop = Math.round(topAt(x0));
@@ -86,6 +101,18 @@ export function fillBelow(c, x0, x1, bottom, topAt, fill, rim, thickness) {
       if (top < bot) {
         c.fillStyle = fill;
         c.fillRect(runStart, top, x - runStart, bot - top);
+        // Strata under the rim: the ground catches the light for a few pixels
+        // and then turns away from it, which is the whole difference between a
+        // seabed and a coloured rectangle.
+        if (bands) {
+          let at = runTop;
+          for (let i = 0; i < bands.length; i++) {
+            const b = bands[i];
+            const y0 = Math.max(0, at), y1 = Math.min(bot, at + b.h);
+            if (y1 > y0) { c.fillStyle = b.fill; c.fillRect(runStart, y0, x - runStart, y1 - y0); }
+            at += b.h;
+          }
+        }
         if (rim && runTop >= -1) { c.fillStyle = rim; c.fillRect(runStart, runTop, x - runStart, 1); }
       }
       runStart = x; runTop = t;
@@ -109,18 +136,38 @@ export function fillAbove(c, x0, x1, top, bottomAt, fill, rim) {
   }
 }
 
-/** A vertical wall on one side: fill out to an edge that varies with row. */
-export function fillSide(c, y0, y1, side, edgeAt, iw, fill, rim) {
+/**
+ * A vertical wall on one side: fill out to an edge that varies with row.
+ * `bands` are strata measured inward from the edge, exactly as in fillBelow —
+ * a wall face turning away from the water rather than a black rectangle.
+ */
+export function fillSide(c, y0, y1, side, edgeAt, iw, fill, rim, bands) {
   let runStart = y0, runEdge = Math.round(edgeAt(y0));
   for (let y = y0 + 1; y <= y1; y++) {
     const e = y < y1 ? Math.round(edgeAt(y)) : -99999;
     if (e !== runEdge) {
+      const h = y - runStart;
       c.fillStyle = fill;
-      if (side < 0) c.fillRect(0, runStart, runEdge, y - runStart);
-      else c.fillRect(runEdge, runStart, iw - runEdge, y - runStart);
+      if (side < 0) c.fillRect(0, runStart, runEdge, h);
+      else c.fillRect(runEdge, runStart, iw - runEdge, h);
+      if (bands) {
+        let at = 0;
+        for (let i = 0; i < bands.length; i++) {
+          const b = bands[i];
+          c.fillStyle = b.fill;
+          if (side < 0) {
+            const x1 = runEdge - at, x0 = Math.max(0, x1 - b.h);
+            if (x1 > x0) c.fillRect(x0, runStart, x1 - x0, h);
+          } else {
+            const x0 = runEdge + at, x1 = Math.min(iw, x0 + b.h);
+            if (x1 > x0) c.fillRect(x0, runStart, x1 - x0, h);
+          }
+          at += b.h;
+        }
+      }
       if (rim) {
         c.fillStyle = rim;
-        c.fillRect(side < 0 ? runEdge - 1 : runEdge, runStart, 1, y - runStart);
+        c.fillRect(side < 0 ? runEdge - 1 : runEdge, runStart, 1, h);
       }
       runStart = y; runEdge = e;
     }

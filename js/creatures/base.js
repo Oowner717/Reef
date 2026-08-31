@@ -5,6 +5,7 @@ import { drawSpriteC, spriteMeta } from '../sprites.js';
 import { screenX, screenY } from '../camera.js';
 import { app } from '../main.js';
 import { createFlock } from '../boids.js';
+import { shade, tint } from '../palette.js';
 
 export const BANDS = ['motes', 'small', 'medium', 'large', 'huge', 'mythical'];
 export const MAX_SPINE = 20;
@@ -98,12 +99,12 @@ export class Creature {
   draw(c) {
     if (!this.alive) return;
     const d = this.def;
-    if (d.render) { d.render(this, c); return; }
-    const a = this.alpha;
+    const a = this.alpha * hazeOf(d);
     if (a <= 0.02) return;
     const prev = c.globalAlpha;
     if (a < 1) c.globalAlpha = prev * a;
-    drawSpriteC(c, this.spriteKey(), this.frameIndex(), this.sx() | 0, this.sy() | 0, this.face < 0);
+    if (d.render) d.render(this, c);
+    else drawSpriteC(c, this.spriteKey(), this.frameIndex(), this.sx() | 0, this.sy() | 0, this.face < 0);
     c.globalAlpha = prev;
   }
 
@@ -115,6 +116,17 @@ export class Creature {
     const x = this.sx(), y = this.sy();
     return x > -w && x < app.iw + w && y > -h && y < app.ih + h;
   }
+}
+
+/**
+ * Depth haze. A species on a far parallax layer is metres of water away, and
+ * water is not clear: letting the column show through it is the whole of the
+ * effect, because what shows through is exactly the colour the haze would be.
+ * Layers nearer than the middle ground are left alone.
+ */
+export function hazeOf(def) {
+  const L = def.layer === undefined ? 1 : def.layer;
+  return L >= 1 ? 1 : Math.max(0.28, 1 - (1 - L) * 0.95);
 }
 
 // --- the species table ------------------------------------------------------
@@ -146,11 +158,16 @@ export function defineSpecies(o) {
 export function speciesById(id) { return SPECIES.find((s) => s.id === id) || null; }
 export function speciesForZone(z) { return SPECIES.filter((s) => s.zones.indexOf(z) >= 0); }
 
-/** The standard palette map for a generated grid. */
+/**
+ * The standard palette map for a generated grid. `s` and `h` are the shaded
+ * back and the lit dorsal rim, derived from the body colour so every species
+ * is countershaded without naming two more tokens each.
+ */
 export function map(o) {
   return {
     '.': null, k: o.k || 'outline', b: o.b, l: o.l || o.b, d: o.d || o.b,
     f: o.f || o.b, e: o.e || 'outline', g: o.g || 'white',
+    s: o.s || shade(o.b), h: o.h || tint(o.b),
   };
 }
 

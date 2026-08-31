@@ -5,7 +5,7 @@ import { addLayer, onResize, app } from '../main.js';
 import { cam, screenY } from '../camera.js';
 import { world, dailySeed, rng } from '../world.js';
 import { P } from '../palette.js';
-import { profile, sampleProfile } from './common.js';
+import { dither, profile, sampleProfile } from './common.js';
 
 let pinnacle = null, edge = null;
 
@@ -32,14 +32,22 @@ function draw(c) {
   const cx = pinnacle.at * app.iw;
   const prev = c.globalAlpha;
   c.globalAlpha = prev * a;
-  c.fillStyle = P.silhouette;
+  const body = dither(c, 'silhouette', 'rock1', 0.28);
   const rows = Math.min(app.ih - Math.max(0, topY), pinnacle.h);
   for (let i = 0; i < rows; i++) {
     const y = topY + i;
     if (y < 0) continue;
     const t = i / pinnacle.h;
     const hw = pinnacle.w * 0.5 * (0.12 + t * 0.88) + sampleProfile(edge, (topY + i) * 4, world.wrapW) * 0.35;
-    c.fillRect((cx - hw) | 0, y | 0, Math.max(1, (hw * 2) | 0), 1);
+    const x0 = (cx - hw) | 0, w = Math.max(1, (hw * 2) | 0);
+    c.fillStyle = body;
+    c.fillRect(x0, y | 0, w, 1);
+    // What little light reaches this far still comes from above, so the rock
+    // keeps a thin lit edge on one flank and the crown stays paler than the
+    // base. Without it the pinnacle is a hole cut in the water.
+    c.fillStyle = P.rock2;
+    c.fillRect(x0, y | 0, Math.max(1, Math.min(2, w)), 1);
+    if (t < 0.16) { c.fillStyle = P.rock1; c.fillRect(x0 + 1, y | 0, Math.max(1, w - 2), 1); }
   }
   c.globalAlpha = prev;
 }

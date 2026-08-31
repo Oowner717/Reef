@@ -7,7 +7,7 @@ import { defineSprite, drawSpriteC } from '../sprites.js';
 import { map } from '../creatures/base.js';
 import { blob } from '../sprites/shapes.js';
 import { P } from '../palette.js';
-import { dither, profile, sampleProfile, fillBelow, blade, floorWorldY } from './common.js';
+import { dither, strata, profile, sampleProfile, fillBelow, blade, floorWorldY } from './common.js';
 
 defineSprite('coral-brain', { map: map({ b: 'coral1', l: 'coral2', d: 'gorgonian' }), frames: blob({ w: 18, h: 12, frames: 2 }) });
 defineSprite('coral-knob', { map: map({ b: 'coral2', l: 'accOrange', d: 'coral1' }), frames: blob({ w: 11, h: 9, frames: 2 }) });
@@ -124,7 +124,8 @@ function draw(c) {
   const top = screenY(floorWorldY(1), 1);
   if (top < app.ih + 60) {
     drawArches(c);
-    fillBelow(c, 0, app.iw, app.ih, floorTopAt, dither(c, 'rock2', 'sand2', 0.35), P.sand1, world.zoneH * 0.16);
+    fillBelow(c, 0, app.iw, app.ih, floorTopAt, dither(c, 'rock1', 'rock2', 0.45), P.sand1,
+      world.zoneH * 0.16, strata(c, 'reef', [[2, 'sand1', 'coral2', 0.25], [4, 'sand2', 'sand1', 0.5], [7, 'rock2', 'sand2', 0.4]]));
     drawKelp(c);
     drawCorals(c);
     drawAnemones(c);

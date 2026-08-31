@@ -7,11 +7,16 @@ through seven zones — shallows, reef, drop-off, open blue, twilight, midnight,
 vent field — and rises back. Every zone visit plays one of 33 small set-piece
 scenes, so no two runs are alike.
 
+Light shafts fall through the shallows, the seabed catches caustics, marine
+snow drifts past, and anything with a bioluminescent organ lights the water
+around it — all of it worked out from the sprites themselves, so nothing in the
+roster had to be told that it glows.
+
 Vanilla JavaScript, Canvas 2D and Web Audio. No dependencies, no build step and
 no asset files: every sprite, landmark and icon is a pixel grid generated in
 code. It works offline after the first load, and nothing ever leaves the phone.
 
-**Version:** 0.14.0
+**Version:** 0.15.0
 
 ---
 

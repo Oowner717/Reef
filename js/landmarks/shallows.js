@@ -3,7 +3,7 @@ import { addLayer, onResize, app } from '../main.js';
 import { cam, screenX, screenY } from '../camera.js';
 import { world, dailySeed, rng } from '../world.js';
 import { P, css } from '../palette.js';
-import { dither, profile, sampleProfile, fillBelow, fillAbove, blade, floorWorldY } from './common.js';
+import { dither, strata, profile, sampleProfile, fillBelow, fillAbove, blade, floorWorldY } from './common.js';
 
 const CEIL_Y = 5;            // world y of the mean surface film
 let sand = null, grass = [], shells = [];
@@ -48,7 +48,8 @@ function drawCeiling(c) {
 function drawFloor(c) {
   const top = screenY(floorWorldY(0), 1);
   if (top > app.ih + 8) return;
-  fillBelow(c, 0, app.iw, app.ih, floorTopAt, dither(c, 'sand2', 'sand1', 0.5), P.sand1, world.zoneH * 0.14);
+  fillBelow(c, 0, app.iw, app.ih, floorTopAt, dither(c, 'sand2', 'brown', 0.32), P.bone,
+    world.zoneH * 0.14, strata(c, 'sand', [[3, 'sand1', 'bone', 0.4], [4, 'sand1', 'sand2', 0.45], [7, 'sand2', 'sand1', 0.35]]));
 }
 
 function drawGrass(c) {

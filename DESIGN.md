@@ -48,6 +48,16 @@ Defined once in `js/palette.js`. No hex value appears anywhere else in the app.
 · `oliveLight #7a9450` · `rust #7a3b1e` · `brown #4a3520` · `maroon #5a1f2e`
 · `palePink #f2b8c6` · `glass #a8d8e8` · `silhouette #060810`
 
+### Derived steps — `shade()` and `tint()`
+
+Two fixed derivations of any token, computed in `js/palette.js` and cached:
+`shade(t)` mixes 44% toward `w6`, so a shadow goes blue-black rather than
+merely dark; `tint(t)` mixes 30% toward `white`. `map()` fills the `s` and `h`
+slots of every creature palette map from the body colour with these, so all 60
+species are countershaded — lit dorsal rim, body, turning flank, pale belly —
+without any of them naming two more tokens. Still one source of truth, still a
+limited palette: exactly two extra steps, always the same two.
+
 ### Contrast rule (enforced when choosing a palette map)
 
 Shallow creatures are warm and saturated against cool water. Open-water animals
@@ -477,6 +487,7 @@ must read at 60 px; 6% margin all round for the iOS rounded mask.
 | Water strip | `iw × 7·ZONE_H` | ≈ 3.4 MB |
 | Sprite atlas | up to 4 × 512×512 | ≤ 4 MB |
 | Bloom buffer (stage 14) | `iw/2 × ih/2` | ≈ 0.06 MB |
+| Glow blobs, shaft and caustic tiles | 9 × 48² + 32×96 + 4 × 48×32 | ≈ 0.11 MB |
 | Visible canvas | `iw × ih` | ≈ 0.5 MB |
 
 Total well under the 32 MB budget. Nothing exceeds 4096 px in either dimension.
@@ -489,3 +500,55 @@ off, shafts down to two, density −30% · 3 minimum particles, no bloom or
 caustics, density −50%, parallax merged. Drop a tier when the 1% low stays
 under 55 for 3 s; raise one only after 20 s above 58 average and 57 on the 1%
 low. Never change tier during a vignette payoff or a mythical hold frame.
+
+---
+
+## 18 · Light, form and haze
+
+Six passes, all of them automatic. No species, landmark or scene declares that
+it glows, catches the light or sits in haze; each one falls out of what the
+thing already is.
+
+**1 · Form shading.** The four generated shapes in `js/sprites/shapes.js`
+(`fish`, `ray`, `bell`, `blob`) light themselves from above: a `h` rim on the
+dorsal edge, `b` through the body, `s` on the flank turning under, `l` on the
+belly. `blob` shades as a sphere. Nothing is flat-filled any more.
+
+**2 · Bloom.** `analyse()` in `js/sprites.js` runs once per sprite at atlas
+build and finds its bright pixels — bright *and* either near-white or strongly
+saturated, so a mid-grey belly is not a lamp. Scattered highlights (a whale
+shark's spot grid, a rim light) are rejected on spread; only pixels clustered
+into a lamp survive. What is left becomes a centre, a radius capped at the
+sprite's own size, a weight and one of nine `GLOW_TOKENS`. Every sprite draw
+offers that to the sink `js/effects.js` registers, which stamps a pre-rendered
+radial blob into a half-resolution buffer composited back with `lighter`.
+Gain is depth-gated — `0.10 + zoneValue(glow) · 1.05` — so almost nothing
+blooms in daylight and in the dark the glow *is* the animal. A white belly is
+lit; a bioluminescent organ is a lamp: `GLOW_WEIGHT` halves the pale tokens so
+pale animals keep their silhouette.
+
+**3 · Light shafts.** Seven soft beams from one pre-rendered tile, drawn into
+the bloom buffer with a rotation and a slow sway, keyed off `zoneValue(shafts)`
+so they belong to the top of the column.
+
+**4 · Caustics.** Four pre-rendered interference tiles, animated by index. On
+the seabed at 0.34 alpha where the light actually lands, and a much fainter
+dapple in the water under the surface film, faded out with distance so it runs
+out rather than ending at a line.
+
+**5 · Depth haze.** `hazeOf()` in `js/creatures/base.js` reads a species'
+parallax layer: anything behind the middle ground is drawn translucent, because
+what shows through is exactly the colour the haze would be. No tinted second
+atlas, no per-draw work. Terrain does the same thing with strata instead —
+`fillBelow` and `fillSide` take a `bands` list, so a seabed catches the light
+for two or three pixels and then turns away from it.
+
+**6 · Ambient particles.** One 380-slot typed-array pool in `js/particles.js`,
+six kinds — bubble, dust, mote, marine snow, vent shimmer, sediment — seeded at
+rates read from the same `zoneValue` curves, drawn in one batched pass per
+kind. Halved and slowed under reduced motion; shed by tier like everything else.
+
+**The water column itself** dithers between two ramp stops with a 4×4 Bayer
+grid, which on its own draws a dead-straight horizontal line wherever the ramp
+crosses a stop. The threshold picks up a slow two-frequency swell and a little
+noise, so the crossing bends and dissolves: light in water, not a seam.

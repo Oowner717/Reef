@@ -4,7 +4,7 @@ import { addLayer, onResize, app } from '../main.js';
 import { cam, screenX, screenY } from '../camera.js';
 import { world, dailySeed, rng } from '../world.js';
 import { P, css } from '../palette.js';
-import { dither, profile, sampleProfile, fillBelow, floorWorldY } from './common.js';
+import { dither, strata, profile, sampleProfile, fillBelow, floorWorldY } from './common.js';
 
 let plain = null, smokers = [], fall = null;
 
@@ -130,7 +130,8 @@ function draw(c) {
   c.globalAlpha = prev * fade;
   const top = screenY(floorWorldY(6), 1);
   fillBelow(c, 0, app.iw, app.ih, (x) => top + sampleProfile(plain, x + cam.x, world.wrapW),
-    dither(c, 'w8', 'maroon', 0.3), P.sand2, world.zoneH * 0.3);
+    dither(c, 'w8', 'maroon', 0.22), P.sand2, world.zoneH * 0.3,
+    strata(c, 'vent', [[2, 'maroon', 'rust', 0.45], [5, 'maroon', 'w8', 0.5]]));
   drawWhaleFall(c);
   for (const s of smokers) drawSmoker(c, s);
   c.globalAlpha = prev;
